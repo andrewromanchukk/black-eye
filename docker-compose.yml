@@ -1,0 +1,35 @@
+# Local environment: Django app + PostgreSQL in containers.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-zapik}
+      POSTGRES_USER: ${POSTGRES_USER:-zapik}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zapik}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-zapik} -d $${POSTGRES_DB:-zapik}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-zapik}:${POSTGRES_PASSWORD:-zapik}@db:5432/${POSTGRES_DB:-zapik}
+      RUN_MIGRATIONS: "1"
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

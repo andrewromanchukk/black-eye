@@ -1,0 +1,29 @@
+{% extends "web/panel/_base.html" %}{% block ptitle %}Grafik{% endblock %}
+{% block content %}<div class="stack">
+<div class="card card--flat row row--between"><span class="small">Twoja strona zapisów: <a href="{{ public_url }}" target="_blank" rel="noopener"><strong>{{ public_url }}</strong></a></span></div>
+<div class="row row--between">
+  <h1 style="margin:0">{{ day|date:"l, j E" }} <span class="badge">{{ count }} wizyt</span></h1>
+  <div class="row">
+    <a class="btn btn--ghost btn--sm" href="?d={{ prev|date:'Y-m-d' }}" aria-label="Poprzedni dzień">‹</a>
+    <a class="btn btn--ghost btn--sm" href="?d={{ today|date:'Y-m-d' }}">Dziś</a>
+    <a class="btn btn--ghost btn--sm" href="?d={{ next|date:'Y-m-d' }}" aria-label="Następny dzień">›</a>
+    <a class="btn btn--primary btn--sm" href="{% url 'web:manual_booking' %}?d={{ day|date:'Y-m-d' }}">+ Dodaj wizytę</a>
+  </div>
+</div>
+{% if columns %}<div class="schedule" style="--bays:{{ columns|length }}">
+{% for bay, items in columns %}<section class="schedule__col" aria-label="{{ bay.name }}">
+  <div class="schedule__head">{{ bay.name }}{% if not bay.is_active %} <span class="badge">nieaktywne</span>{% endif %}</div>
+  {% for b in items %}<article class="booking-card booking-card--{{ b.status }}">
+    <div class="row row--between"><span class="booking-card__time">{{ b.start|time:"H:i" }}–{{ b.end|time:"H:i" }}</span><span class="badge badge--{{ b.status }}">{{ b.get_status_display }}</span></div>
+    <div>{{ b.service.name }}{% if b.source == 'manual' %} <span class="small muted">· tel.</span>{% endif %}</div>
+    <div class="small muted">{{ b.customer.name }} · <a href="tel:{{ b.customer.phone }}">{{ b.customer.phone }}</a> · <span class="mono">{{ b.plate }}</span></div>
+    {% if b.note %}<div class="small">„{{ b.note }}”</div>{% endif %}
+    {% if b.status == 'confirmed' %}<div class="booking-card__actions">
+      {% for value, label in b.Status.choices %}{% if value != 'confirmed' %}
+      <form class="btn-inline-form" method="post" action="{% url 'web:booking_status' b.pk %}">{% csrf_token %}<input type="hidden" name="status" value="{{ value }}"><button class="btn btn--{% if value == 'cancelled' %}danger{% else %}ghost{% endif %} btn--sm">{% if value == 'completed' %}Wykonano{% elif value == 'no_show' %}Nie przyszedł{% else %}Anuluj{% endif %}</button></form>
+      {% endif %}{% endfor %}
+    </div>{% endif %}
+  </article>{% empty %}<div class="empty">Brak wizyt</div>{% endfor %}
+</section>{% endfor %}
+</div>{% else %}<div class="empty">Dodaj pierwsze <a href="{% url 'web:bays' %}">stanowisko</a>.</div>{% endif %}
+</div>{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% block title %}Logowanie — Zapik{% endblock %}{% block container_class %}container--narrow{% endblock %}
+{% block content %}
+<div class="card"><h1>Zaloguj się</h1>
+<form method="post" novalidate>{% csrf_token %}
+{% if form.errors %}<div class="alert alert--error" role="alert">Nieprawidłowy e-mail lub hasło.</div><br>{% endif %}
+<div class="field"><label class="label" for="id_username">E-mail</label><input class="input" type="email" name="username" id="id_username" autocomplete="email" required value="{{ form.username.value|default:'' }}"></div>
+<div class="field"><label class="label" for="id_password">Hasło</label><input class="input" type="password" name="password" id="id_password" autocomplete="current-password" required></div>
+<input type="hidden" name="next" value="{{ next }}">
+<div class="field"><button class="btn btn--primary btn--block">Zaloguj</button></div></form>
+<p class="small"><a href="{% url 'web:password_reset' %}">Nie pamiętasz hasła?</a> · <a href="{% url 'web:signup' %}">Załóż konto</a></p></div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Zapik — zapisy na wymianę opon bez telefonu{% endblock %}
+{% block content %}{% endblock %}
+{% block fullwidth %}
+<section class="hero"><div class="container stack">
+  <h1 class="hero__title">Zapisy na wymianę opon bez odbierania telefonu</h1>
+  <p class="hero__lead">Klient sam wybiera wolny termin na Twojej stronie Zapik. Ty widzisz grafik dnia dla każdego stanowiska i pracujesz dalej przy kole.</p>
+  <div class="row"><a class="btn btn--cta" href="{% url 'web:signup' %}">Załóż konto, 30 dni za darmo</a><a class="btn btn--ghost" href="#jak-to-dziala">Jak to działa</a></div>
+  <p class="small muted">79 zł netto miesięcznie po okresie próbnym. Bez prowizji od klientów.</p>
+</div></section>
+
+<section class="section section--white"><div class="container grid grid--2">
+  <div><h2>W sezonie telefon dzwoni, gdy masz ręce w kole</h2></div>
+  <div class="stack-sm"><p>W marcu i listopadzie kierowcy dzwonią po kilka razy dziennie, żeby zapytać o wolny termin. Każde nieodebrane połączenie to klient, który dzwoni do następnego warsztatu.</p>
+  <p>Z Zapik kierowca widzi wolne godziny na stronie i rezerwuje je sam. Do Ciebie trafia gotowa wizyta z imieniem, telefonem i numerem rejestracyjnym.</p></div>
+</div></section>
+
+<section class="section" id="jak-to-dziala"><div class="container stack">
+  <h2>Jak to działa</h2>
+  <div class="grid grid--3">
+    <div class="card"><h3 class="card__title">1. Ustaw warsztat</h3><p class="muted">Godziny otwarcia, stanowiska i usługi z czasem trwania. Zajmuje to około 5 minut.</p></div>
+    <div class="card"><h3 class="card__title">2. Udostępnij link</h3><p class="muted">Dostajesz adres zapik.pl/w/twoj-warsztat. Wklej go w Google Maps, na Facebooku i na kartce na drzwiach.</p></div>
+    <div class="card"><h3 class="card__title">3. Pracuj według grafiku</h3><p class="muted">Rano otwierasz grafik dnia. Wizyty z telefonu dopisujesz w tym samym kalendarzu, więc terminy się nie nakładają.</p></div>
+  </div>
+</div></section>
+
+<section class="section section--white"><div class="container grid grid--2">
+  <div><h2>Przechowalnia, która sama przypomina o sezonie</h2>
+  <p class="muted">Wpisujesz komplet opon z numerem rejestracyjnym i miejscem na regale. Przed sezonem wybierasz klientów i jednym kliknięciem wysyłasz SMS z linkiem do zapisu.</p></div>
+  <ul class="checklist">
+    <li>Szukanie kompletu po numerze rejestracyjnym lub telefonie</li>
+    <li>Lista wszystkich opon letnich albo zimowych w magazynie</li>
+    <li>Widać, komu przypomnienie już poszło</li>
+  </ul>
+</div></section>
+
+<section class="section" id="cennik"><div class="container container--narrow">
+  <div class="card stack">
+    <h2>Jedna cena</h2>
+    <p class="price">79 zł <span class="small muted">netto / miesiąc</span></p>
+    <ul class="checklist">
+      <li>Nielimitowane rezerwacje i stanowiska</li>
+      <li>Strona zapisów dla klientów</li>
+      <li>Grafik dnia i wizyty telefoniczne</li>
+      <li>Przechowalnia opon i przypomnienia</li>
+    </ul>
+    <a class="btn btn--cta btn--block" href="{% url 'web:signup' %}">Załóż konto, 30 dni za darmo</a>
+    <p class="small muted">Bez karty płatniczej przy rejestracji.</p>
+  </div>
+</div></section>
+
+<section class="section section--white"><div class="container container--narrow stack">
+  <h2>Pytania</h2>
+  <div><h3>Czy klient musi instalować aplikację?</h3><p class="muted">Nie. Strona zapisów działa w przeglądarce telefonu.</p></div>
+  <div><h3>Co z klientami, którzy dzwonią?</h3><p class="muted">Dopisujesz ich w panelu. Zapik blokuje ten czas na stanowisku, więc nikt inny go nie zarezerwuje.</p></div>
+  <div><h3>Płacę za każdego nowego klienta?</h3><p class="muted">Płacisz stałą miesięczną kwotę, niezależnie od liczby rezerwacji.</p></div>
+</div></section>
+{% endblock %}

@@ -1,0 +1,2 @@
+{% extends "web/panel/_base.html" %}{% block ptitle %}{{ title }}{% endblock %}{% block container_class %}container--narrow{% endblock %}
+{% block content %}<div class="card"><h1>{{ title }}</h1><form method="post" novalidate>{% csrf_token %}{% include "web/_form_fields.html" %}<div class="field row"><button class="btn btn--primary">Zapisz</button><a class="btn btn--ghost" href="{% url back %}">Wróć</a></div></form></div>{% endblock %}

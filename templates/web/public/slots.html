@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block title %}{{ service.name }} — {{ workshop.name }}{% endblock %}{% block container_class %}container--narrow{% endblock %}{% block nav %}{% endblock %}
+{% block content %}<div class="stack">
+{% include "web/public/_header.html" %}
+<p><a href="{% url 'web:public_booking' workshop.slug %}">‹ Zmień usługę</a></p>
+<div class="card card--flat"><span class="option__title">{{ service.name }}</span> <span class="muted small">· {{ service.duration_min }} min{% if service.price is not None %} · {{ service.price|floatformat:"-2" }} zł{% endif %}</span></div>
+<h2>Wybierz dzień</h2>
+{% if days %}<nav class="date-strip" aria-label="Wybór dnia">{% for d in days %}
+<a class="date-chip" href="?d={{ d|date:'Y-m-d' }}"{% if d == day %} aria-current="date"{% endif %}>{{ d|date:"D" }}<strong>{{ d|date:"j" }}</strong>{{ d|date:"b" }}</a>{% endfor %}</nav>
+<h2>Wolne terminy · {{ day|date:"l, j E" }}</h2>
+{% if slots %}<div class="slot-grid">{% for s in slots %}<a class="slot" href="{% url 'web:public_book' workshop.slug service.pk %}?start={{ s.start|date:'c'|urlencode }}">{{ s.label }}</a>{% endfor %}</div>
+{% else %}<div class="empty">Brak wolnych terminów tego dnia. Wybierz inny dzień.</div>{% endif %}
+{% else %}<div class="empty">Brak dni otwartych do rezerwacji.</div>{% endif %}
+</div>{% endblock %}

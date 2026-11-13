@@ -1,0 +1,14 @@
+{% extends "web/panel/_base.html" %}{% block ptitle %}Ustawienia{% endblock %}
+{% block content %}<form method="post" novalidate class="stack">{% csrf_token %}
+<h1>Ustawienia warsztatu</h1>
+<div class="grid grid--2">
+  <div class="card"><h2>Dane i zapisy</h2>{% include "web/_form_fields.html" %}</div>
+  <div class="card"><h2>Godziny otwarcia</h2>{{ hours.management_form }}
+  {% if hours.non_form_errors %}<div class="alert alert--error">{{ hours.non_form_errors }}</div>{% endif %}
+  <div class="table-wrap"><table class="table"><thead><tr><th scope="col">Dzień</th><th scope="col">Zamknięte</th><th scope="col">Od</th><th scope="col">Do</th></tr></thead><tbody>
+  {% for f in hours %}<tr>{{ f.id }}<th scope="row">{{ f.instance.get_weekday_display }}</th><td>{{ f.is_closed }}</td><td>{{ f.opens }}</td><td>{{ f.closes }}</td></tr>
+  {% if f.non_field_errors %}<tr><td colspan="4" class="error">{{ f.non_field_errors|join:" " }}</td></tr>{% endif %}{% endfor %}
+  </tbody></table></div></div>
+</div>
+<div><button class="btn btn--primary">Zapisz</button></div>
+</form>{% endblock %}

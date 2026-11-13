@@ -6,9 +6,9 @@
 
 **Blocked by:** #18
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `SmsapiBackend` (Bearer, `to`=48XXXXXXXXX, `format=json`, фолбек на api2) з тестами на підмінному транспорті
-- [ ] Модель `SmsMessage` і сторінка журналу в панелі
-- [ ] Помилка → `status=failed`, запис у лог, бронювання створене
-- [ ] Налаштування лише з env (`SMSAPI_TOKEN`, `SMSAPI_SENDER`)
+- [x] `SmsapiBackend` (Bearer, `to`=48XXXXXXXXX, `format=json`, фолбек на api2) з тестами на підмінному транспорті
+- [x] Модель `SmsMessage` і сторінка журналу в панелі
+- [x] Помилка → `status=failed`, запис у лог, бронювання створене
+- [x] Налаштування лише з env (`SMSAPI_TOKEN`, `SMSAPI_SENDER`)

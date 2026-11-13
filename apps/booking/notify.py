@@ -14,4 +14,5 @@ def confirmation_text(booking) -> str:
 
 
 def booking_confirmed(booking) -> None:
-    transaction.on_commit(lambda: sms.send_sms(booking.customer.phone, confirmation_text(booking)))
+    transaction.on_commit(lambda: sms.send_sms(booking.customer.phone, confirmation_text(booking),
+                                               workshop=booking.workshop, kind="booking_confirmation"))

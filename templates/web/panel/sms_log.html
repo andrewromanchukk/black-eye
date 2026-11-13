@@ -1,0 +1,9 @@
+{% extends "web/panel/_base.html" %}{% block ptitle %}SMS{% endblock %}
+{% block content %}<div class="stack">
+<h1>Wysłane SMS</h1>
+<p class="muted">Ostatnie 200 wiadomości wysłanych w imieniu warsztatu.</p>
+<div class="table-wrap"><table class="table"><thead><tr><th scope="col">Data</th><th scope="col">Telefon</th><th scope="col">Rodzaj</th><th scope="col">Treść</th><th scope="col">Status</th></tr></thead><tbody>
+{% for m in sms_messages %}<tr><td>{{ m.created_at|date:"d.m H:i" }}</td><td>{{ m.phone }}</td><td>{{ m.get_kind_display }}</td><td class="small">{{ m.text|truncatechars:90 }}</td>
+<td>{% if m.status == 'sent' %}<span class="badge badge--completed">{{ m.get_status_display }}</span>{% else %}<span class="badge badge--cancelled" title="{{ m.error }}">{{ m.get_status_display }}</span>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="5">Brak wysłanych SMS.</td></tr>{% endfor %}</tbody></table></div>
+</div>{% endblock %}

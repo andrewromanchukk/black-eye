@@ -13,6 +13,7 @@ from django.views.decorators.http import require_POST
 from apps.booking import engine, reservations
 from apps.booking.reservations import CustomerDetails
 from apps.booking.models import Booking
+from apps.notifications.models import SmsMessage
 from apps.storage import services as storage
 from apps.storage.models import TireDeposit
 from apps.workshops import tenancy
@@ -317,3 +318,10 @@ def reminders(request):
     return render(request, "web/panel/reminders.html", {
         "season": season, "seasons": TireDeposit.Season.choices, "candidates": candidates,
         "preview": storage.reminder_text(workshop, candidates[0]) if candidates else None})
+
+
+@login_required
+def sms_log(request):
+    owner_workshop(request)
+    messages_qs = tenancy.scoped(SmsMessage, request)[:200]
+    return render(request, "web/panel/sms_log.html", {"sms_messages": messages_qs})

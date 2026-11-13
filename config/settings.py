@@ -105,6 +105,10 @@ EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Zapik <no-reply@zapik.pl>")
 
 SMS_BACKEND = env("SMS_BACKEND")
+SMSAPI_TOKEN = env("SMSAPI_TOKEN", default="")
+SMSAPI_SENDER = env("SMSAPI_SENDER", default="")
+SMSAPI_URL = env("SMSAPI_URL", default="https://api.smsapi.pl/sms.do")
+SMSAPI_BACKUP_URL = env("SMSAPI_BACKUP_URL", default="https://api2.smsapi.pl/sms.do")
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [

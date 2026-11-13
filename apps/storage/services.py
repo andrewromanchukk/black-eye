@@ -61,8 +61,10 @@ def send_reminders(workshop, deposit_ids) -> int:
     deposits = TireDeposit.objects.filter(
         workshop=workshop, pk__in=deposit_ids, status=TireDeposit.Status.STORED).select_related("customer")
     for deposit in deposits:
-        sms.send_sms(deposit.customer.phone, reminder_text(workshop, deposit))
-        deposit.reminded_at = timezone.now()
-        deposit.save(update_fields=["reminded_at"])
-        sent += 1
+        msg = sms.send_sms(deposit.customer.phone, reminder_text(workshop, deposit), workshop=workshop,
+                           kind="season_reminder")
+        if msg.status == msg.Status.SENT:
+            deposit.reminded_at = timezone.now()
+            deposit.save(update_fields=["reminded_at"])
+            sent += 1
     return sent

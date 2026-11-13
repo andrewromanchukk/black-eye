@@ -60,6 +60,7 @@ class Booking(models.Model):
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.CONFIRMED)
     source = models.CharField(max_length=8, choices=Source.choices, default=Source.ONLINE)
     note = models.CharField("Uwagi", max_length=300, blank=True)
+    reminder_sent_at = models.DateTimeField(null=True, blank=True, editable=False)
     cancel_token = models.CharField(max_length=64, unique=True, default=new_cancel_token, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

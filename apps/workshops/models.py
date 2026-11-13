@@ -33,6 +33,8 @@ class Workshop(models.Model):
         "Zapisy na ile dni do przodu", default=30, validators=[MinValueValidator(1), MaxValueValidator(180)])
     min_notice_min = models.PositiveSmallIntegerField(
         "Minimalne wyprzedzenie (min)", default=60, validators=[MaxValueValidator(7 * 24 * 60)])
+    visit_reminders = models.BooleanField(
+        "SMS z przypomnieniem dzień przed wizytą", default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

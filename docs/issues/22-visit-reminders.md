@@ -6,9 +6,9 @@
 
 **Blocked by:** #21
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `manage.py send_visit_reminders`: вікно 20–28 год, лише confirmed, без дублікатів
-- [ ] `Workshop.visit_reminders` у налаштуваннях (за замовчуванням увімкнено)
-- [ ] Тести з фіксованим `now`
-- [ ] Документація запуску щогодини (cron / ECS Scheduled Task)
+- [x] `manage.py send_visit_reminders`: вікно 20–28 год, лише confirmed, без дублікатів
+- [x] `Workshop.visit_reminders` у налаштуваннях (за замовчуванням увімкнено)
+- [x] Тести з фіксованим `now`
+- [x] Документація запуску щогодини (cron / ECS Scheduled Task)

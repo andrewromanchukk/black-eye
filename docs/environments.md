@@ -25,3 +25,11 @@
 - [ ] Rate limiting публічного запису (API вже має throttle 60/хв)
 - [ ] Перевірені юристом Regulamin, Polityka prywatności, umowa powierzenia
 - [ ] CI/CD (свідомо відкладено на цьому етапі)
+
+## Періодичні задачі
+| Команда | Частота | Що робить |
+|---|---|---|
+| `python manage.py send_visit_reminders` | щогодини | SMS за 20–28 год до підтвердженого візиту; повторний запуск нічого не дублює |
+
+- **local:** `0 * * * * cd /path/to/black-eye && docker compose exec -T web python manage.py send_visit_reminders` (crontab), або запускайте вручну.
+- **staging/production:** ECS Scheduled Task (EventBridge, `rate(1 hour)`) з тим самим образом і командою.

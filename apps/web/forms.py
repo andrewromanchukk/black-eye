@@ -48,7 +48,8 @@ class SignupForm(KitMixin, forms.Form):
 class WorkshopForm(KitMixin, forms.ModelForm):
     class Meta:
         model = Workshop
-        fields = ["name", "slug", "address", "phone", "slot_step_min", "booking_horizon_days", "min_notice_min"]
+        fields = ["name", "slug", "address", "phone", "slot_step_min", "booking_horizon_days", "min_notice_min",
+                  "visit_reminders"]
 
 
 class OpeningHoursForm(KitMixin, forms.ModelForm):

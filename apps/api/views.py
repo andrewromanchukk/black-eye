@@ -15,7 +15,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
-from apps.booking import engine, notify
+from apps.booking import engine, reservations
+from apps.booking.reservations import CustomerDetails
 from apps.booking.models import Booking
 from apps.storage import services as storage
 from apps.storage.models import TireDeposit
@@ -40,6 +41,10 @@ def parse_date(value) -> date:
         return date.fromisoformat(value)
     except (TypeError, ValueError):
         raise ValidationError({"date": "Use YYYY-MM-DD."})
+
+
+def _details(d) -> CustomerDetails:
+    return CustomerDetails(name=d["name"], phone=d["phone"], plate=d["plate"], note=d.get("note", ""))
 
 
 class WorkshopScoped:
@@ -100,9 +105,7 @@ class BookingViewSet(WorkshopScoped, mixins.ListModelMixin, mixins.RetrieveModel
         d = ser.validated_data
         service = get_object_or_404(Service, pk=d["service"], workshop=workshop)
         try:
-            booking = engine.book(workshop, service, d["start"], customer_name=d["name"], phone=d["phone"],
-                                  plate=d["plate"], note=d.get("note", ""), source=Booking.Source.MANUAL,
-                                  enforce_rules=False)
+            booking = reservations.reserve_manual(workshop, service, d["start"], _details(d))
         except engine.SlotUnavailable as e:
             return Response({"detail": str(e)}, status=status.HTTP_409_CONFLICT)
         except engine.InvalidBooking as e:
@@ -176,16 +179,15 @@ def public_book(request, slug):
     ser = s.BookingCreateSerializer(data=request.data)
     ser.is_valid(raise_exception=True)
     d = ser.validated_data
-    if not d.get("consent"):
-        raise ValidationError({"consent": "Consent to the privacy policy is required."})
     service = get_object_or_404(Service, pk=d["service"], workshop=workshop, is_active=True)
     try:
-        booking = engine.book(workshop, service, d["start"], customer_name=d["name"], phone=d["phone"],
-                              plate=d["plate"], note=d.get("note", ""))
+        booking = reservations.reserve_online(workshop, service, d["start"], _details(d),
+                                              consent=d.get("consent", False))
+    except reservations.ConsentRequired as e:
+        raise ValidationError({"consent": str(e)})
     except engine.SlotUnavailable as e:
         return Response({"detail": str(e)}, status=status.HTTP_409_CONFLICT)
     except engine.InvalidBooking as e:
         raise ValidationError({"detail": str(e)})
-    notify.booking_confirmed(booking)
     return Response({"start": booking.start, "end": booking.end, "cancel_token": booking.cancel_token},
                     status=status.HTTP_201_CREATED)

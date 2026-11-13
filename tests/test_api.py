@@ -69,3 +69,14 @@ class ApiTests(APITestCase):
         r = self.client.post("/api/v1/services/", {"name": "X", "duration_min": 30,
                                                    "bays": [other_ws.bays.first().pk]}, format="json")
         self.assertEqual(r.status_code, 400)
+
+
+class PublicConsentTests(APITestCase):
+    def test_public_booking_without_consent_is_400(self):
+        ws, service = make_workshop()
+        slot = first_free_slot(ws, service)
+        r = self.client.post(f"/api/v1/public/workshops/{ws.slug}/bookings/", {
+            "service": service.pk, "start": slot.start.isoformat(), "name": "Jan", "phone": "600123456",
+            "plate": "X1"}, format="json")
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("consent", r.data)

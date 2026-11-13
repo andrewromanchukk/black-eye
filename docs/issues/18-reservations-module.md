@@ -6,9 +6,9 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `reserve_online`, `reserve_manual`, `cancel_by_customer` з тестами на interface
-- [ ] Веб і API не викликають `engine.book` і `notify` напряму
-- [ ] Без згоди → `ConsentRequired` (400 в API, помилка форми у вебі)
-- [ ] Усі наявні тести зелені
+- [x] `reserve_online`, `reserve_manual`, `cancel_by_customer` з тестами на interface
+- [x] Веб і API не викликають `engine.book` і `notify` напряму
+- [x] Без згоди → `ConsentRequired` (400 в API, помилка форми у вебі)
+- [x] Усі наявні тести зелені

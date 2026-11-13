@@ -10,7 +10,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from apps.booking import engine, notify
+from apps.booking import engine, reservations
+from apps.booking.reservations import CustomerDetails
 from apps.booking.models import Booking
 from apps.storage import services as storage
 from apps.storage.models import TireDeposit
@@ -120,16 +121,15 @@ def public_book(request, slug, service_id):
     form = forms.PublicBookingForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         d = form.cleaned_data
+        details = CustomerDetails(name=d["name"], phone=d["phone"], plate=d["plate"], note=d["note"])
         try:
-            booking = engine.book(workshop, service, start, customer_name=d["name"], phone=d["phone"],
-                                  plate=d["plate"], note=d["note"])
+            booking = reservations.reserve_online(workshop, service, start, details, consent=d["consent"])
         except engine.SlotUnavailable:
             messages.error(request, "Ktoś właśnie zajął ten termin. Wybierz inny.")
             return redirect(slots_url)
         except engine.InvalidBooking as e:
             form.add_error(None, str(e))
         else:
-            notify.booking_confirmed(booking)
             return redirect("web:cancel_booking", token=booking.cancel_token)
     return render(request, "web/public/book.html", {
         "workshop": workshop, "service": service, "start": timezone.localtime(start), "form": form,
@@ -139,11 +139,15 @@ def public_book(request, slug, service_id):
 def cancel_booking(request, token):
     """Booking page for the customer: confirmation + self-service cancel."""
     booking = get_object_or_404(Booking.objects.select_related("workshop", "service"), cancel_token=token)
-    can_cancel = engine.can_customer_cancel(booking)
-    if request.method == "POST" and can_cancel:
-        engine.cancel(booking)
-        messages.success(request, "Rezerwacja anulowana.")
+    if request.method == "POST":
+        try:
+            reservations.cancel_by_customer(booking)
+        except reservations.CannotCancel as e:
+            messages.error(request, str(e))
+        else:
+            messages.success(request, "Rezerwacja anulowana.")
         return redirect("web:cancel_booking", token=token)
+    can_cancel = engine.can_customer_cancel(booking)
     return render(request, "web/public/booking_detail.html", {
         "booking": booking, "workshop": booking.workshop, "can_cancel": can_cancel,
         "start": timezone.localtime(booking.start)})
@@ -191,10 +195,9 @@ def manual_booking(request):
     form = forms.ManualBookingForm(request.POST or None, workshop=workshop, initial=initial)
     if request.method == "POST" and form.is_valid():
         d = form.cleaned_data
+        details = CustomerDetails(name=d["name"], phone=d["phone"], plate=d["plate"], note=d["note"])
         try:
-            booking = engine.book(workshop, d["service"], d["start"], customer_name=d["name"], phone=d["phone"],
-                                  plate=d["plate"], note=d["note"], source=Booking.Source.MANUAL,
-                                  enforce_rules=False)
+            booking = reservations.reserve_manual(workshop, d["service"], d["start"], details)
         except (engine.SlotUnavailable, engine.InvalidBooking) as e:
             form.add_error(None, str(e))
         else:

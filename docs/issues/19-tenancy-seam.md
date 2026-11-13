@@ -6,8 +6,8 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `current_workshop`, `scoped` у одному модулі
-- [ ] Жодної в'юхи з власним фільтром `workshop=`
-- [ ] Параметризований тест: усі маршрути панелі та API з чужим id → 404
+- [x] `current_workshop`, `scoped` у одному модулі
+- [x] Жодної в'юхи з власним фільтром `workshop=`
+- [x] Параметризований тест: усі маршрути панелі та API з чужим id → 404

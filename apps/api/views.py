@@ -20,6 +20,7 @@ from apps.booking.reservations import CustomerDetails
 from apps.booking.models import Booking
 from apps.storage import services as storage
 from apps.storage.models import TireDeposit
+from apps.workshops import tenancy
 from apps.workshops.models import Bay, Service, Workshop
 
 from . import serializers as s
@@ -30,9 +31,10 @@ class ObtainToken(ObtainAuthToken):
 
 
 def owner_workshop(request) -> Workshop:
+    """API adapter for the tenancy seam: no workshop -> 404."""
     try:
-        return request.user.workshop
-    except Workshop.DoesNotExist:
+        return tenancy.current_workshop(request)
+    except tenancy.NoWorkshop:
         raise NotFound("No workshop for this user.")
 
 
@@ -74,14 +76,16 @@ class BayViewSet(WorkshopScoped, viewsets.ModelViewSet):
     serializer_class = s.BaySerializer
 
     def get_queryset(self):
-        return Bay.objects.filter(workshop=self.get_workshop())
+        self.get_workshop()
+        return tenancy.scoped(Bay, self.request)
 
 
 class ServiceViewSet(WorkshopScoped, viewsets.ModelViewSet):
     serializer_class = s.ServiceSerializer
 
     def get_queryset(self):
-        return Service.objects.filter(workshop=self.get_workshop()).prefetch_related("bays")
+        self.get_workshop()
+        return tenancy.scoped(Service, self.request).prefetch_related("bays")
 
 
 class BookingViewSet(WorkshopScoped, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -90,7 +94,8 @@ class BookingViewSet(WorkshopScoped, mixins.ListModelMixin, mixins.RetrieveModel
     serializer_class = s.BookingSerializer
 
     def get_queryset(self):
-        qs = Booking.objects.filter(workshop=self.get_workshop()).select_related("customer", "service", "bay")
+        self.get_workshop()
+        qs = tenancy.scoped(Booking, self.request).select_related("customer", "service", "bay")
         if self.action == "list":
             day = parse_date(self.request.query_params["date"]) if "date" in self.request.query_params \
                 else timezone.localdate()
@@ -103,7 +108,7 @@ class BookingViewSet(WorkshopScoped, mixins.ListModelMixin, mixins.RetrieveModel
         ser = s.BookingCreateSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
         d = ser.validated_data
-        service = get_object_or_404(Service, pk=d["service"], workshop=workshop)
+        service = get_object_or_404(tenancy.scoped(Service, request), pk=d["service"])
         try:
             booking = reservations.reserve_manual(workshop, service, d["start"], _details(d))
         except engine.SlotUnavailable as e:

@@ -15,6 +15,7 @@ from apps.booking.reservations import CustomerDetails
 from apps.booking.models import Booking
 from apps.storage import services as storage
 from apps.storage.models import TireDeposit
+from apps.workshops import tenancy
 from apps.workshops.models import Bay, Service, Workshop
 
 from . import forms
@@ -25,10 +26,19 @@ User = get_user_model()
 # ---------- helpers ----------
 
 def owner_workshop(request) -> Workshop:
+    """Web adapter for the tenancy seam: no workshop -> 404."""
     try:
-        return request.user.workshop
-    except Workshop.DoesNotExist:
+        return tenancy.current_workshop(request)
+    except tenancy.NoWorkshop:
         raise Http404("Brak warsztatu")
+
+
+def owned_or_404(model, request, **lookup):
+    owner_workshop(request)
+    try:
+        return tenancy.get_owned(model, request, **lookup)
+    except model.DoesNotExist:
+        raise Http404()
 
 
 def parse_day(value: str | None) -> date:
@@ -166,7 +176,7 @@ def schedule(request):
     day = parse_day(request.GET.get("d"))
     tz = timezone.get_current_timezone()
     start = datetime.combine(day, datetime.min.time(), tzinfo=tz)
-    bookings = (Booking.objects.filter(workshop=workshop, start__gte=start, start__lt=start + timedelta(days=1))
+    bookings = (tenancy.scoped(Booking, request).filter(start__gte=start, start__lt=start + timedelta(days=1))
                 .exclude(status=Booking.Status.CANCELLED).select_related("customer", "service", "bay"))
     bays = list(workshop.bays.all())
     columns = [(bay, [b for b in bookings if b.bay_id == bay.pk]) for bay in bays]
@@ -179,8 +189,7 @@ def schedule(request):
 @login_required
 @require_POST
 def booking_status(request, pk):
-    workshop = owner_workshop(request)
-    booking = get_object_or_404(Booking, pk=pk, workshop=workshop)
+    booking = owned_or_404(Booking, request, pk=pk)
     engine.set_status(booking, request.POST.get("status", ""))
     messages.success(request, f"Status: {booking.get_status_display()}")
     return redirect(reverse("web:schedule") + f"?d={timezone.localtime(booking.start).date()}")
@@ -235,7 +244,7 @@ def bays(request):
 
 @login_required
 def bay_edit(request, pk):
-    bay = get_object_or_404(Bay, pk=pk, workshop=owner_workshop(request))
+    bay = owned_or_404(Bay, request, pk=pk)
     form = forms.BayForm(request.POST or None, instance=bay)
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -263,7 +272,7 @@ def services(request):
 @login_required
 def service_edit(request, pk):
     workshop = owner_workshop(request)
-    service = get_object_or_404(Service, pk=pk, workshop=workshop)
+    service = owned_or_404(Service, request, pk=pk)
     form = forms.ServiceForm(request.POST or None, instance=service, workshop=workshop)
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -290,7 +299,7 @@ def storage_list(request):
 @login_required
 @require_POST
 def storage_return(request, pk):
-    deposit = get_object_or_404(TireDeposit, pk=pk, workshop=owner_workshop(request))
+    deposit = owned_or_404(TireDeposit, request, pk=pk)
     storage.mark_returned(deposit)
     messages.success(request, f"Wydano opony {deposit.plate}.")
     return redirect("web:storage")

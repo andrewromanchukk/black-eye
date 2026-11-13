@@ -20,7 +20,8 @@ from django.utils import timezone
 
 from apps.workshops.models import Bay, Service, Workshop
 
-from .models import Booking, Customer, normalize_phone, normalize_plate
+from . import customers
+from .models import Booking, normalize_phone, normalize_plate
 
 WARSAW = ZoneInfo("Europe/Warsaw")
 
@@ -146,10 +147,7 @@ def book(workshop: Workshop, service: Service, start: datetime, *, customer_name
             if not bay_ids:
                 raise SlotUnavailable("Wszystkie stanowiska są zajęte w tym czasie.")
 
-        customer, _ = Customer.objects.get_or_create(workshop=workshop, phone=phone_n, defaults={"name": name})
-        if customer.name != name:
-            customer.name = name
-            customer.save(update_fields=["name"])
+        customer = customers.resolve(workshop, name, phone_n)
         return Booking.objects.create(
             workshop=workshop, bay_id=bay_ids[0], service=service, customer=customer, plate=plate_n,
             start=start, end=end, note=(note or "").strip()[:300], source=source,

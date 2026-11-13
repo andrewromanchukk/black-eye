@@ -6,8 +6,8 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `customers.resolve` використовують engine і przechowalnia
-- [ ] Тест: бронювання + депозит з тим самим телефоном → один Customer, актуальне ім'я
-- [ ] `customers.search`, `customers.history`
+- [x] `customers.resolve` використовують engine і przechowalnia
+- [x] Тест: бронювання + депозит з тим самим телефоном → один Customer, актуальне ім'я
+- [x] `customers.search`, `customers.history`

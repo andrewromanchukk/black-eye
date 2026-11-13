@@ -7,15 +7,15 @@ from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.booking.models import Customer, normalize_phone, normalize_plate
+from apps.booking import customers
+from apps.booking.models import normalize_phone, normalize_plate
 from apps.notifications import sms
 
 from .models import TireDeposit
 
 
 def register_deposit(workshop, *, customer_name, phone, plate, season, description, location="", stored_at=None):
-    phone_n = normalize_phone(phone)
-    customer, _ = Customer.objects.get_or_create(workshop=workshop, phone=phone_n, defaults={"name": customer_name})
+    customer = customers.resolve(workshop, customer_name, phone)
     return TireDeposit.objects.create(
         workshop=workshop, customer=customer, plate=normalize_plate(plate), season=season,
         description=description, location=location, stored_at=stored_at or date.today(),
@@ -35,8 +35,12 @@ def search(workshop, query: str = "", status: str | None = TireDeposit.Status.ST
         qs = qs.filter(status=status)
     query = (query or "").strip()
     if query:
-        qs = qs.filter(Q(plate__icontains=normalize_plate(query)) | Q(customer__phone__contains=normalize_phone(query) or query)
-                       | Q(customer__name__icontains=query))
+        cond = Q(customer__name__icontains=query)
+        if plate := normalize_plate(query):
+            cond |= Q(plate__contains=plate)
+        if not any(ch.isalpha() for ch in query) and len(phone := normalize_phone(query)) >= 3:
+            cond |= Q(customer__phone__contains=phone)
+        qs = qs.filter(cond)
     return qs
 
 

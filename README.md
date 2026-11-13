@@ -42,7 +42,7 @@ python manage.py test tests        # 33 тести: Booking engine, веб-сц�
 | `design/` | `tokens.css`, `kit.css` (джерело правди для UI) і статичний прототип `design/prototype/` |
 | `design-system/zapik/MASTER.md` | Дизайн-система (ui-ux-pro-max) |
 | `docs/spec/01-mvp-spec.md` | Специфікація MVP (#1) |
-| `docs/issues/` | Тікети #2–#16 (`scripts/publish_issues.sh` → GitHub Issues) |
+| `docs/issues/` | Тікети #2–#16 (опубліковані в GitHub Issues) |
 | `docs/adr/` | Архітектурні рішення |
 | `docs/environments.md` | Середовища local/staging/production і стадії |
 | `GLOSSARY.md` | Словник домену |

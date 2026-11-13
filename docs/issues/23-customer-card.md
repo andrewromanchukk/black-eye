@@ -6,9 +6,9 @@
 
 **Blocked by:** #19, #20
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `/panel/klienci/` з пошуком
-- [ ] `/panel/klienci/<id>/` з історією
-- [ ] Посилання з розкладу
-- [ ] Без горизонтального скролу на 375px
+- [x] `/panel/klienci/` з пошуком
+- [x] `/panel/klienci/<id>/` з історією
+- [x] Посилання з розкладу
+- [x] Без горизонтального скролу на 375px

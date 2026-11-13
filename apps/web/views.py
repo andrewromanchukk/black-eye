@@ -10,9 +10,9 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from apps.booking import engine, reservations
+from apps.booking import customers, engine, reservations
 from apps.booking.reservations import CustomerDetails
-from apps.booking.models import Booking
+from apps.booking.models import Booking, Customer
 from apps.notifications.models import SmsMessage
 from apps.storage import services as storage
 from apps.storage.models import TireDeposit
@@ -325,3 +325,17 @@ def sms_log(request):
     owner_workshop(request)
     messages_qs = tenancy.scoped(SmsMessage, request)[:200]
     return render(request, "web/panel/sms_log.html", {"sms_messages": messages_qs})
+
+
+@login_required
+def customer_list(request):
+    workshop = owner_workshop(request)
+    q = request.GET.get("q", "")
+    return render(request, "web/panel/customers.html", {
+        "q": q, "customers": customers.search(workshop, q)[:100]})
+
+
+@login_required
+def customer_detail(request, pk):
+    customer = owned_or_404(Customer, request, pk=pk)
+    return render(request, "web/panel/customer_detail.html", {"h": customers.history(customer)})

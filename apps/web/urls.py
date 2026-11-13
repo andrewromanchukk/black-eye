@@ -39,6 +39,8 @@ urlpatterns = [
     path("panel/przechowalnia/<int:pk>/wydaj/", views.storage_return, name="storage_return"),
     path("panel/przypomnienia/", views.reminders, name="reminders"),
     path("panel/sms/", views.sms_log, name="sms_log"),
+    path("panel/klienci/", views.customer_list, name="customers"),
+    path("panel/klienci/<int:pk>/", views.customer_detail, name="customer_detail"),
     # customer booking
     path("w/<slug:slug>/", views.public_booking, name="public_booking"),
     path("w/<slug:slug>/<int:service_id>/", views.public_slots, name="public_slots"),

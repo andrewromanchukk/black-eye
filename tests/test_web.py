@@ -147,3 +147,30 @@ class PublicPagesTests(TestCase):
         for name in ("web:landing", "web:terms", "web:privacy", "web:login", "web:signup"):
             self.assertEqual(self.client.get(reverse(name)).status_code, 200, name)
         self.assertEqual(self.client.get("/healthz").content, b"ok")
+
+
+class CustomerCardTests(TestCase):
+    def test_search_card_and_link_from_schedule(self):
+        ws, service = make_workshop()
+        slot = first_free_slot(ws, service)
+        b = engine.book(ws, service, slot.start, customer_name="Anna", phone="501222333", plate="WX7788K")
+        from apps.storage import services as storage
+        storage.register_deposit(ws, customer_name="Anna", phone="501222333", plate="WX7788K", season="winter",
+                                 description="195/65 R15", location="B3")
+        self.client.login(username="owner@example.com", password="Haslo!2345")
+        r = self.client.get(reverse("web:customers") + "?q=wx7788")
+        self.assertContains(r, "Anna")
+        card = reverse("web:customer_detail", args=[b.customer_id])
+        self.assertContains(self.client.get(reverse("web:schedule") + f"?d={slot.start.date()}"), card)
+        r = self.client.get(card)
+        self.assertContains(r, "WX7788K")
+        self.assertContains(r, "195/65 R15")
+        self.assertContains(r, "B3")
+
+    def test_other_workshop_customer_card_is_404(self):
+        ws, service = make_workshop("a@example.com")
+        make_workshop("b@example.com")
+        slot = first_free_slot(ws, service)
+        b = engine.book(ws, service, slot.start, customer_name="Anna", phone="501222333", plate="X1")
+        self.client.login(username="b@example.com", password="Haslo!2345")
+        self.assertEqual(self.client.get(reverse("web:customer_detail", args=[b.customer_id])).status_code, 404)

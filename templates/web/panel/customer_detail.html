@@ -1,0 +1,27 @@
+{% extends "web/panel/_base.html" %}{% block ptitle %}{{ h.customer.name }}{% endblock %}
+{% block content %}<div class="stack">
+<p><a href="{% url 'web:customers' %}">‹ Klienci</a></p>
+<div class="card row row--between">
+  <div><h1 style="margin-bottom:var(--space-1)">{{ h.customer.name }}</h1>
+  <p class="muted" style="margin:0"><a href="tel:{{ h.customer.phone }}">{{ h.customer.phone }}</a> · klient od {{ h.customer.created_at|date:"d.m.Y" }}</p></div>
+  <div class="row">
+    <span class="badge badge--completed">wizyty: {{ h.visits_done }}</span>
+    {% if h.no_shows %}<span class="badge badge--no_show">nie przyszedł: {{ h.no_shows }}</span>{% endif %}
+  </div>
+</div>
+<div class="grid grid--2">
+  <section class="card stack-sm"><h2>Auta</h2>
+    {% for p in h.plates %}<div class="mono">{{ p }}</div>{% empty %}<p class="muted">Brak.</p>{% endfor %}
+  </section>
+  <section class="card stack-sm"><h2>Opony w przechowalni</h2>
+    {% for d in h.deposits %}<div><strong class="mono">{{ d.plate }}</strong> · {{ d.get_season_display }} · {{ d.description }}
+      <span class="small muted">· {% if d.status == 'stored' %}{{ d.location|default:"bez miejsca" }}{% else %}wydane {{ d.returned_at|date:"d.m.Y" }}{% endif %}</span></div>
+    {% empty %}<p class="muted">Brak.</p>{% endfor %}
+  </section>
+</div>
+<section class="stack-sm"><h2>Wizyty</h2>
+<div class="table-wrap"><table class="table"><thead><tr><th scope="col">Termin</th><th scope="col">Usługa</th><th scope="col">Auto</th><th scope="col">Status</th></tr></thead><tbody>
+{% for b in h.bookings %}<tr><td><a href="{% url 'web:schedule' %}?d={{ b.start|date:'Y-m-d' }}">{{ b.start|date:"d.m.Y H:i" }}</a></td><td>{{ b.service.name }}</td><td class="mono">{{ b.plate }}</td><td><span class="badge badge--{{ b.status }}">{{ b.get_status_display }}</span></td></tr>
+{% empty %}<tr><td colspan="4">Brak wizyt.</td></tr>{% endfor %}</tbody></table></div>
+</section>
+</div>{% endblock %}

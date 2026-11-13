@@ -4,6 +4,7 @@
 <nav class="nav" aria-label="Panel">
   {% with u=request.resolver_match.url_name %}
   <a href="{% url 'web:schedule' %}"{% if u == 'schedule' or u == 'manual_booking' %} aria-current="page"{% endif %}>Grafik</a>
+  <a href="{% url 'web:customers' %}"{% if u == 'customers' or u == 'customer_detail' %} aria-current="page"{% endif %}>Klienci</a>
   <a href="{% url 'web:storage' %}"{% if u == 'storage' %} aria-current="page"{% endif %}>Przechowalnia</a>
   <a href="{% url 'web:reminders' %}"{% if u == 'reminders' %} aria-current="page"{% endif %}>Przypomnienia</a>
   <a href="{% url 'web:sms_log' %}"{% if u == 'sms_log' %} aria-current="page"{% endif %}>SMS</a>

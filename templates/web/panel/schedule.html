@@ -16,7 +16,7 @@
   {% for b in items %}<article class="booking-card booking-card--{{ b.status }}">
     <div class="row row--between"><span class="booking-card__time">{{ b.start|time:"H:i" }}–{{ b.end|time:"H:i" }}</span><span class="badge badge--{{ b.status }}">{{ b.get_status_display }}</span></div>
     <div>{{ b.service.name }}{% if b.source == 'manual' %} <span class="small muted">· tel.</span>{% endif %}</div>
-    <div class="small muted">{{ b.customer.name }} · <a href="tel:{{ b.customer.phone }}">{{ b.customer.phone }}</a> · <span class="mono">{{ b.plate }}</span></div>
+    <div class="small muted"><a href="{% url 'web:customer_detail' b.customer_id %}">{{ b.customer.name }}</a> · <a href="tel:{{ b.customer.phone }}">{{ b.customer.phone }}</a> · <span class="mono">{{ b.plate }}</span></div>
     {% if b.note %}<div class="small">„{{ b.note }}”</div>{% endif %}
     {% if b.status == 'confirmed' %}<div class="booking-card__actions">
       {% for value, label in b.Status.choices %}{% if value != 'confirmed' %}

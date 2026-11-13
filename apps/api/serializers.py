@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.booking.models import Booking
+from apps.booking.models import Booking, Customer
 from apps.storage.models import TireDeposit
 from apps.workshops.models import Bay, OpeningHours, Service, Workshop
 
@@ -17,7 +17,7 @@ class WorkshopSerializer(serializers.ModelSerializer):
     class Meta:
         model = Workshop
         fields = ["id", "name", "slug", "address", "phone", "slot_step_min", "booking_horizon_days",
-                  "min_notice_min", "opening_hours"]
+                  "min_notice_min", "visit_reminders", "opening_hours"]
         read_only_fields = ["id"]
 
 
@@ -101,3 +101,20 @@ class TireDepositCreateSerializer(serializers.Serializer):
     season = serializers.ChoiceField(choices=TireDeposit.Season.choices)
     description = serializers.CharField(max_length=200)
     location = serializers.CharField(max_length=40, required=False, allow_blank=True)
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = ["id", "name", "phone", "created_at"]
+
+
+def customer_history_data(h) -> dict:
+    return {
+        **CustomerSerializer(h.customer).data,
+        "plates": h.plates,
+        "visits_done": h.visits_done,
+        "no_shows": h.no_shows,
+        "bookings": BookingSerializer(h.bookings, many=True).data,
+        "tire_deposits": TireDepositSerializer(h.deposits, many=True).data,
+    }

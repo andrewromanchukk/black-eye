@@ -15,9 +15,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
-from apps.booking import engine, reservations
+from apps.booking import customers, engine, reservations
 from apps.booking.reservations import CustomerDetails
-from apps.booking.models import Booking
+from apps.booking.models import Booking, Customer
 from apps.storage import services as storage
 from apps.storage.models import TireDeposit
 from apps.workshops import tenancy
@@ -151,6 +151,21 @@ class TireDepositViewSet(WorkshopScoped, mixins.ListModelMixin, mixins.RetrieveM
         """POST {"ids": [1,2,3]} — send season reminders."""
         ids = request.data.get("ids") or []
         return Response({"sent": storage.send_reminders(self.get_workshop(), ids)})
+
+
+class CustomerViewSet(WorkshopScoped, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """GET ?q=<name|phone|plate> — search. GET /{id}/ — card with visits, cars and stored tires."""
+
+    serializer_class = s.CustomerSerializer
+
+    def get_queryset(self):
+        workshop = self.get_workshop()
+        if self.action == "list":
+            return customers.search(workshop, self.request.query_params.get("q", ""))
+        return tenancy.scoped(Customer, self.request)
+
+    def retrieve(self, request, pk=None):
+        return Response(s.customer_history_data(customers.history(self.get_object())))
 
 
 # ---------- public (customer) ----------

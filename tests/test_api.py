@@ -80,3 +80,25 @@ class PublicConsentTests(APITestCase):
             "plate": "X1"}, format="json")
         self.assertEqual(r.status_code, 400)
         self.assertIn("consent", r.data)
+
+
+class CustomerApiTests(APITestCase):
+    def test_search_card_and_reminder_toggle(self):
+        ws, service = make_workshop()
+        slot = first_free_slot(ws, service)
+        b = engine.book(ws, service, slot.start, customer_name="Anna", phone="501222333", plate="WX7788K")
+        r = self.client.post("/api/v1/auth/token/", {"username": "owner@example.com", "password": "Haslo!2345"})
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + r.data["token"])
+
+        r = self.client.get("/api/v1/customers/", {"q": "wx 7788"})
+        self.assertEqual([c["name"] for c in r.data["results"]], ["Anna"])
+        r = self.client.get(f"/api/v1/customers/{b.customer_id}/")
+        self.assertEqual(r.data["plates"], ["WX7788K"])
+        self.assertEqual(r.data["bookings"][0]["id"], b.pk)
+        self.assertEqual(r.data["tire_deposits"], [])
+
+        self.assertTrue(self.client.get("/api/v1/workshop/").data["visit_reminders"])
+        r = self.client.patch("/api/v1/workshop/", {"visit_reminders": False}, format="json")
+        self.assertFalse(r.data["visit_reminders"])
+        ws.refresh_from_db()
+        self.assertFalse(ws.visit_reminders)

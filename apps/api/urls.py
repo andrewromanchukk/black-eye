@@ -8,6 +8,7 @@ router.register("bays", views.BayViewSet, basename="bay")
 router.register("services", views.ServiceViewSet, basename="service")
 router.register("bookings", views.BookingViewSet, basename="booking")
 router.register("tire-deposits", views.TireDepositViewSet, basename="tire-deposit")
+router.register("customers", views.CustomerViewSet, basename="customer")
 
 urlpatterns = [
     path("auth/token/", views.ObtainToken.as_view(), name="api-token"),

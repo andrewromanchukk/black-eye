@@ -24,9 +24,18 @@ python manage.py migrate && python manage.py seed_demo
 python manage.py runserver
 ```
 
+## SMS (SMSAPI.pl)
+Локально SMS пишуться в консоль. Для реальної відправки в `.env`:
+```
+SMS_BACKEND=apps.notifications.backends.SmsapiBackend
+SMSAPI_TOKEN=<OAuth-токен з панелі SMSAPI>
+SMSAPI_SENDER=<зареєстроване ім'я відправника, необов'язково>
+```
+Нагадування за добу: `python manage.py send_visit_reminders` щогодини (див. `docs/environments.md`).
+
 ## Тести
 ```bash
-python manage.py test tests        # 33 тести: Booking engine, веб-сценарії, API, паралельний запис
+python manage.py test tests        # 64 тести на PostgreSQL
 ```
 
 ## Структура
@@ -36,7 +45,11 @@ python manage.py test tests        # 33 тести: Booking engine, веб-сц�
 | `apps/workshops` | Workshop, години роботи, стенди (Bay), послуги |
 | `apps/booking` | Customer, Booking, повідомлення про запис |
 | `apps/storage` | Przechowalnia: зберігання шин і сезонні нагадування |
-| `apps/notifications` | `send_sms()` з підмінним бекендом (у прототипі — лог) |
+| `apps/booking/reservations.py` | Єдиний шлях запису (онлайн/ручний) + SMS-підтвердження |
+| `apps/booking/customers.py` | Один клієнт на телефон, пошук, історія |
+| `apps/booking/reminders.py` | Нагадування за добу (`manage.py send_visit_reminders`, щогодини) |
+| `apps/workshops/tenancy.py` | Seam ізоляції: поточна майстерня і її дані |
+| `apps/notifications` | `send_sms()` + журнал `SmsMessage`; бекенди: лог, SMSAPI.pl |
 | `apps/web` | Веб-сторінки: лендинг, юридичні, запис клієнта, панель власника |
 | `apps/api` | REST API v1 для майбутнього мобільного застосунку |
 | `design/` | `tokens.css`, `kit.css` (джерело правди для UI) і статичний прототип `design/prototype/` |
@@ -58,6 +71,8 @@ python manage.py test tests        # 33 тести: Booking engine, веб-сц�
 | POST | `/api/v1/bookings/{id}/status/` | `completed` / `no_show` / `cancelled` |
 | GET/POST | `/api/v1/tire-deposits/?q=` | Зберігання шин |
 | POST | `/api/v1/tire-deposits/{id}/return/`, `/api/v1/tire-deposits/remind/` | Видача, нагадування |
+| GET | `/api/v1/customers/?q=` | Пошук клієнтів (ім'я, телефон, номер авто) |
+| GET | `/api/v1/customers/{id}/` | Картка: візити, авто, шини |
 | GET | `/api/v1/public/workshops/{slug}/` | Публічно: майстерня й послуги |
 | GET | `/api/v1/public/workshops/{slug}/services/{id}/slots/?date=` | Публічно: вільні слоти |
 | POST | `/api/v1/public/workshops/{slug}/bookings/` | Публічно: запис (409, якщо слот зайняли) |

@@ -6,8 +6,8 @@
 
 **Blocked by:** #22, #23
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `GET /api/v1/customers/?q=`, `GET /api/v1/customers/{id}/`
-- [ ] `visit_reminders` у `/api/v1/workshop/`
-- [ ] Тести APIClient, включно з ізоляцією
+- [x] `GET /api/v1/customers/?q=`, `GET /api/v1/customers/{id}/`
+- [x] `visit_reminders` у `/api/v1/workshop/`
+- [x] Тести APIClient, включно з ізоляцією

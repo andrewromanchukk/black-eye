@@ -49,6 +49,7 @@ class TenancyIsolationTests(TestCase):
             ("get", f"/api/v1/bookings/{self.booking.pk}/"), ("post", f"/api/v1/bookings/{self.booking.pk}/status/"),
             ("get", f"/api/v1/tire-deposits/{self.deposit.pk}/"),
             ("post", f"/api/v1/tire-deposits/{self.deposit.pk}/return/"),
+            ("get", f"/api/v1/customers/{self.booking.customer_id}/"),
         ]
         for method, url in routes:
             with self.subTest(url=url, method=method):

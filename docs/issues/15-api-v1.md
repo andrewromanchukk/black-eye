@@ -4,9 +4,9 @@
 
 **Blocked by:** #10, #13
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Token auth
-- [ ] Ізоляція: власник бачить лише свій Workshop
-- [ ] Публічні: послуги, слоти, створення запису
-- [ ] Тести APIClient
+- [x] Token auth
+- [x] Ізоляція: власник бачить лише свій Workshop
+- [x] Публічні: послуги, слоти, створення запису
+- [x] Тести APIClient

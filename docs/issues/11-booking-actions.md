@@ -4,8 +4,8 @@
 
 **Blocked by:** #10
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Статуси confirmed/completed/no_show/cancelled
-- [ ] Скасований запис звільняє слот
-- [ ] Ручний запис не може перетнутися з іншими
+- [x] Статуси confirmed/completed/no_show/cancelled
+- [x] Скасований запис звільняє слот
+- [x] Ручний запис не може перетнутися з іншими

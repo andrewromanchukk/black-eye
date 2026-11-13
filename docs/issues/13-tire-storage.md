@@ -4,8 +4,8 @@
 
 **Blocked by:** #03
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] CRUD депозитів
-- [ ] Пошук за номером авто і телефоном
-- [ ] Статуси stored/returned
+- [x] CRUD депозитів
+- [x] Пошук за номером авто і телефоном
+- [x] Статуси stored/returned

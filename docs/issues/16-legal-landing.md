@@ -4,8 +4,8 @@
 
 **Blocked by:** #02
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Лендинг польською (копірайтинг із marketingskills)
-- [ ] Regulamin і Polityka prywatności з позначкою «wymaga weryfikacji prawnika»
-- [ ] Посилання у футері всіх сторінок
+- [x] Лендинг польською (копірайтинг із marketingskills)
+- [x] Regulamin і Polityka prywatności з позначкою «wymaga weryfikacji prawnika»
+- [x] Посилання у футері всіх сторінок

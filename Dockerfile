@@ -10,9 +10,9 @@ RUN pip install -r requirements.txt
 
 COPY . .
 RUN DJANGO_SECRET_KEY=build python manage.py collectstatic --noinput \
-    && chmod +x docker/entrypoint.sh && chown -R app:app /app
+    && chown -R app:app /app
 
 USER app
 EXPOSE 8000
-ENTRYPOINT ["docker/entrypoint.sh"]
+ENTRYPOINT ["sh", "docker/entrypoint.sh"]
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--access-logfile", "-"]

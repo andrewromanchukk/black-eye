@@ -1,4 +1,24 @@
-# Local environment: Django app + PostgreSQL in containers.
+# One command to run Zapik locally:
+#
+#     docker compose up
+#
+# Starts PostgreSQL, the web app (migrations + demo data on start) and the hourly
+# reminder scheduler. No .env needed; create one from .env.example to override.
+# Open http://localhost:8000 · demo panel: demo@zapik.pl / ZapikDemo2026
+
+x-app-env: &app-env
+  DJANGO_ENV: ${DJANGO_ENV:-local}
+  DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-local-dev-only-not-secret}
+  DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,web}
+  DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
+  SITE_URL: ${SITE_URL:-http://localhost:8000}
+  DATABASE_URL: postgres://${POSTGRES_USER:-zapik}:${POSTGRES_PASSWORD:-zapik}@db:5432/${POSTGRES_DB:-zapik}
+  SMS_BACKEND: ${SMS_BACKEND:-apps.notifications.backends.LogSmsBackend}
+  SMSAPI_TOKEN: ${SMSAPI_TOKEN:-}
+  SMSAPI_SENDER: ${SMSAPI_SENDER:-}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
 services:
   db:
     image: postgres:16-alpine
@@ -7,28 +27,45 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-zapik}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zapik}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"   # change POSTGRES_PORT if 5432 is busy on your machine
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-zapik} -d $${POSTGRES_DB:-zapik}"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
       timeout: 3s
-      retries: 10
+      retries: 20
 
   web:
     build: .
-    env_file: .env
+    image: zapik-web:local
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-zapik}:${POSTGRES_PASSWORD:-zapik}@db:5432/${POSTGRES_DB:-zapik}
+      <<: *app-env
       RUN_MIGRATIONS: "1"
+      SEED_DEMO: ${SEED_DEMO:-1}
     command: python manage.py runserver 0.0.0.0:8000
     ports:
-      - "8000:8000"
+      - "${WEB_PORT:-8000}:8000"
+    volumes:
+      - .:/app            # live code reload
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  scheduler:
+    image: zapik-web:local
+    environment: *app-env
+    command: ["sh", "-c", "while true; do python manage.py send_visit_reminders; sleep 3600; done"]
     volumes:
       - .:/app
     depends_on:
-      db:
+      web:
         condition: service_healthy
 
 volumes:

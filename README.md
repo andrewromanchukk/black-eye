@@ -7,31 +7,36 @@
 ## Стек
 Python 3.13 · Django 5.2 · Django REST Framework · PostgreSQL 16 · Docker / docker compose. Без CI/CD на цьому етапі.
 
-## Швидкий старт (Docker)
+## Запуск локально — одна команда
+Потрібен лише Docker (Docker Desktop або Docker Engine з Compose v2).
 ```bash
-cp .env.example .env
-docker compose up --build          # Postgres + застосунок, міграції запускаються автоматично
-docker compose exec web python manage.py seed_demo
+docker compose up        # або: make up
 ```
-Відкрийте http://localhost:8000. Демо: `/w/opony-kowalski/`, панель — `demo@zapik.pl` / `ZapikDemo2026`.
+Перший запуск збирає образ (кілька хвилин), далі стартує за секунди. Піднімаються:
+- `db` — PostgreSQL 16 (дані зберігаються у volume `pgdata`);
+- `web` — застосунок на http://localhost:8000; при старті сам застосовує міграції й завантажує демо-дані; код підхоплюється без перезапуску;
+- `scheduler` — щогодини надсилає нагадування про візити (локально SMS пишуться в лог).
 
-## Запуск без Docker для застосунку (Postgres у контейнері)
+Демо: сторінка запису http://localhost:8000/w/opony-kowalski/, панель — `demo@zapik.pl` / `ZapikDemo2026`.
+
+`.env` не потрібен. Щоб змінити налаштування, скопіюйте `.env.example` у `.env`. Якщо порт 5432 або 8000 зайнятий: `POSTGRES_PORT=5433 WEB_PORT=8001 docker compose up`.
+
+| Команда | Що робить |
+|---|---|
+| `make up` | Зібрати й запустити все |
+| `make down` | Зупинити (дані лишаються) |
+| `make reset` | Зупинити й **видалити** локальну базу |
+| `make logs` | Логи застосунку й планувальника |
+| `make test` | Тести всередині контейнера |
+
+## Запуск без Docker для застосунку
 ```bash
-cp .env.example .env
 docker compose up -d db
+cp .env.example .env
 pip install -r requirements.txt
 python manage.py migrate && python manage.py seed_demo
 python manage.py runserver
 ```
-
-## SMS (SMSAPI.pl)
-Локально SMS пишуться в консоль. Для реальної відправки в `.env`:
-```
-SMS_BACKEND=apps.notifications.backends.SmsapiBackend
-SMSAPI_TOKEN=<OAuth-токен з панелі SMSAPI>
-SMSAPI_SENDER=<зареєстроване ім'я відправника, необов'язково>
-```
-Нагадування за добу: `python manage.py send_visit_reminders` щогодини (див. `docs/environments.md`).
 
 ## Тести
 ```bash

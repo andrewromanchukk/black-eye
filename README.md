@@ -59,6 +59,8 @@ python manage.py test tests        # 64 тести на PostgreSQL
 | `docs/adr/` | Архітектурні рішення |
 | `docs/environments.md` | Середовища local/staging/production і стадії |
 | `GLOSSARY.md` | Словник домену |
+| `docs/journal/JOURNAL.md` | Журнал проєкту для ретроспективи |
+| `CLAUDE.md` | Інструкції для агента (включно з веденням журналу) |
 
 ## REST API v1 (коротко)
 | Метод | Шлях | Опис |

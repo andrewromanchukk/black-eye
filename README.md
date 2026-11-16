@@ -5,7 +5,7 @@
 **Статус:** прототип (MVP). Остання версія завжди в гілці `dev`.
 
 ## Стек
-Python 3.13 · Django 5.2 · Django REST Framework · PostgreSQL 16 · Docker / docker compose. Без CI/CD на цьому етапі.
+Python 3.13.18 · Django 5.2 · Django REST Framework · PostgreSQL 16 · Docker / docker compose. Без CI/CD на цьому етапі.
 
 ## Запуск локально — одна команда
 Потрібен лише Docker (Docker Desktop або Docker Engine з Compose v2).
@@ -29,11 +29,14 @@ docker compose up        # або: make up
 | `make logs` | Логи застосунку й планувальника |
 | `make test` | Тести всередині контейнера |
 
+## Залежності
+`requirements.in` — прямі залежності; `requirements.txt` — згенерований lock-файл з хешами (не редагувати вручну). Як оновлювати — `docs/build-environment.md`.
+
 ## Запуск без Docker для застосунку
 ```bash
 docker compose up -d db
 cp .env.example .env
-pip install -r requirements.txt
+pip install --require-hashes -r requirements.txt
 python manage.py migrate && python manage.py seed_demo
 python manage.py runserver
 ```
@@ -62,6 +65,7 @@ python manage.py test tests        # 64 тести на PostgreSQL
 | `docs/spec/01-mvp-spec.md` | Специфікація MVP (#1) |
 | `docs/issues/` | Тікети #2–#16 (опубліковані в GitHub Issues) |
 | `docs/adr/` | Архітектурні рішення |
+| `docs/build-environment.md` | Зафіксоване середовище збірки й оновлення версій |
 | `docs/environments.md` | Середовища local/staging/production і стадії |
 | `GLOSSARY.md` | Словник домену |
 | `docs/journal/JOURNAL.md` | Журнал проєкту для ретроспективи |

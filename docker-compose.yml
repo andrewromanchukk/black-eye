@@ -21,7 +21,8 @@ x-app-env: &app-env
 
 services:
   db:
-    image: postgres:16-alpine
+    # postgres:16.16-alpine3.24, multi-arch index digest, checked 2026-11-16 (see docs/build-environment.md)
+    image: postgres:16.16-alpine3.24@sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-zapik}
       POSTGRES_USER: ${POSTGRES_USER:-zapik}

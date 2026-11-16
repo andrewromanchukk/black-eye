@@ -97,11 +97,27 @@
 - ⚠️ Digest узято з Docker Hub API (реєстри з хмарного середовища заблоковані); кожен підтверджено двома незалежними запитами (конкретний тег = плаваючий тег), але реальний `docker pull` за digest і повна збірка образу ще не виконувались. 👤 Перевірка: `scripts/verify_pins.sh` і `docker compose up --build`.
 - Ризик: оновлення безпеки базових образів тепер не приходять автоматично — потрібен місячний ритм або Renovate.
 
+### 17:06–17:20 · Альтернативи фіксації середовища і golden base image
+- 👤 Запитав про інші способи фіксації середовища. 🤖 Порівняв: uv, Poetry/PDM, власний base-образ в ECR, snapshot.debian.org, distroless/Chainguard, Nix, Dev Containers, Bazel; рекомендація — uv зараз, golden image + Renovate пізніше.
+- 👤 Попросив Dockerfile для власного golden image.
+- 🤖 Зроблено:
+  - `docker/base/Dockerfile` (`zapik-base`): python 3.13.18-slim-trixie за digest, `tini=0.19.0-3+b8` (PID 1), `pip==26.3`, користувач `app` uid/gid 10001, `/app`, OCI-мітки;
+  - `Dockerfile` застосунку тепер `FROM base` (через `BASE_IMAGE`), лише залежності з хешами + код;
+  - `docker-compose.yml`: сервіс `base` (`scale: 0`) + `additional_contexts: service:base` — запуск лишився однією командою;
+  - `scripts/base-image.sh build|push` (multi-arch, ECR з immutable тегами й scan on push, друкує digest), `make base` / `make base-push`;
+  - `docs/base-image.md`, ADR-0004, оновлено `docs/build-environment.md`, `scripts/verify_pins.sh`.
+- Перевірено: механізм compose (base збирається першим, не запускається, мітки успадковуються) — на іграшкових локальних образах; обидва Dockerfile проходять `docker build --check`. Лінтер знайшов помилку (ARG `PYTHON_IMAGE` недоступний після `FROM`) — виправлено.
+- Факти: склад офіційного slim-образу (ca-certificates, netbase, tzdata) — з Dockerfile docker-library; версія tini — з Debian madison API (packages.debian.org блокує автоматичні запити).
+- ⚠️ Реальна збірка base-образу тут неможлива (реєстри й, імовірно, дзеркала Debian заблоковані). 👤 Перевірка: `docker compose up --build`.
+- Ризик: точна версія apt-пакета зникає з дзеркал після нової збірки Debian → збірка base падає до свідомого оновлення.
+- Також: dockerd у хмарному середовищі падав через застарілий pid-файл, Postgres зупинявся між сесіями — перезапускав.
+
 ---
 
 ## Матеріал для ретроспективи
 
 ### Що спрацювало
+- Іграшкові локальні образи + `docker build --check` дали змогу перевірити Docker-конфігурацію навіть без доступу до реєстрів; лінтер знайшов реальну помилку.
 - Перехід на правила «факт з джерелом / не знайдено / висновок окремо» швидко виявив помилки в ранніх висновках (Booksy 45%, Klinika XP).
 - Відсів ніш через пошук домінантного гравця (Klinika XP, WodGuru) заощадив час до написання коду.
 - Тести на інтерфейсі модулів знайшли реальні баги (порожній «сьогодні», пошук за цифрами телефону, мобільний скрол) до користувачів.

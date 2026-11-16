@@ -13,6 +13,7 @@ Python 3.13.18 · Django 5.2 · Django REST Framework · PostgreSQL 16 · Docker
 docker compose up        # або: make up
 ```
 Перший запуск збирає образ (кілька хвилин), далі стартує за секунди. Піднімаються:
+- `base` — збирається golden base image (`docker/base`), як контейнер не запускається;
 - `db` — PostgreSQL 16 (дані зберігаються у volume `pgdata`);
 - `web` — застосунок на http://localhost:8000; при старті сам застосовує міграції й завантажує демо-дані; код підхоплюється без перезапуску;
 - `scheduler` — щогодини надсилає нагадування про візити (локально SMS пишуться в лог).
@@ -28,6 +29,7 @@ docker compose up        # або: make up
 | `make reset` | Зупинити й **видалити** локальну базу |
 | `make logs` | Логи застосунку й планувальника |
 | `make test` | Тести всередині контейнера |
+| `make base` / `make base-push` | Зібрати golden base image / опублікувати в ECR |
 
 ## Залежності
 `requirements.in` — прямі залежності; `requirements.txt` — згенерований lock-файл з хешами (не редагувати вручну). Як оновлювати — `docs/build-environment.md`.
@@ -65,6 +67,7 @@ python manage.py test tests        # 64 тести на PostgreSQL
 | `docs/spec/01-mvp-spec.md` | Специфікація MVP (#1) |
 | `docs/issues/` | Тікети #2–#16 (опубліковані в GitHub Issues) |
 | `docs/adr/` | Архітектурні рішення |
+| `docs/base-image.md` | Golden base image: шари, ECR, оновлення |
 | `docs/build-environment.md` | Зафіксоване середовище збірки й оновлення версій |
 | `docs/environments.md` | Середовища local/staging/production і стадії |
 | `GLOSSARY.md` | Словник домену |

@@ -10,10 +10,11 @@ check() {  # $1 = "image:tag@sha256:..." as written in the repo
   if [ "$actual" = "$pinned" ]; then echo "OK    $tag"; else
     echo "DIFF  $tag  pinned=$pinned  registry=$actual  (tag was rebuilt; see docs/build-environment.md)"; fail=1; fi
 }
-check "$(sed -n 's/^FROM \(python:[^ ]*\).*/\1/p' Dockerfile)"
+PY_IMAGE="$(sed -n 's/^ARG PYTHON_IMAGE=\(.*\)$/\1/p' docker/base/Dockerfile)"
+check "$PY_IMAGE"
 check "$(sed -n 's/^ *image: \(postgres:[^ ]*\).*/\1/p' docker-compose.yml)"
 echo "Lock file:"
-docker run --rm -v "$PWD:/src" -w /src "$(sed -n 's/^FROM \([^ ]*\).*/\1/p' Dockerfile)" sh -c \
+docker run --rm -v "$PWD:/src" -w /src "$PY_IMAGE" sh -c \
   "pip install -q pip-tools && pip-compile --quiet --generate-hashes --strip-extras --no-emit-index-url \
    --output-file=/tmp/req.txt requirements.in && diff -q /tmp/req.txt requirements.txt" \
   && echo "OK    requirements.txt matches requirements.in" || { echo "DIFF  regenerate requirements.txt"; fail=1; }

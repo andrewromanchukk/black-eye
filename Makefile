@@ -1,5 +1,5 @@
 # Shortcuts. The only command you need is `make up` (= docker compose up --build).
-.PHONY: up down reset logs test shell base base-push app app-push
+.PHONY: up down reset logs test shell
 
 up:      ## build and start everything (db, web, scheduler)
 	docker compose up --build
@@ -18,15 +18,3 @@ test:    ## run the test suite inside the web container
 
 shell:
 	docker compose exec web python manage.py shell
-
-base:    ## build the golden base image locally (zapik-base:local)
-	scripts/base-image.sh build
-
-base-push: ## multi-arch build & push base image to ECR (needs AWS_ACCOUNT_ID, AWS_REGION)
-	scripts/base-image.sh push
-
-app:     ## build the app image on the published base (needs BASE_IMAGE=…@sha256:…)
-	scripts/app-image.sh build
-
-app-push: ## multi-arch build & push app image to ECR (needs BASE_IMAGE, AWS_ACCOUNT_ID, AWS_REGION)
-	scripts/app-image.sh push

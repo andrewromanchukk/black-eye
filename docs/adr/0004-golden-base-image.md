@@ -6,7 +6,7 @@
 ADR-0003 зафіксував середовище збірки в одному Dockerfile. З появою кількох сервісів (web, scheduler, далі — воркери, мобільний API) і ECS у production потрібне одне місце, де визначено й централізовано оновлюється runtime.
 
 ## Decision
-`docker/base/Dockerfile` → образ `zapik-base`: офіційний Python за digest, зафіксовані tini і pip, користувач `app` з фіксованим uid 10001, tini як PID 1. Публікується в ECR (immutable теги, scan on push) скриптом `scripts/base-image.sh`; застосунки збираються `FROM` нього за digest. Локально compose збирає його автоматично (сервіс `base`, `scale: 0`, `additional_contexts: service:base`) — запуск лишається однією командою.
+`docker/base/Dockerfile` → образ `zapik-base`: офіційний Python за digest, зафіксовані tini і pip, користувач `app` з фіксованим uid 10001, tini як PID 1. Публікується власником вручну в його реєстр (`docs/registry-guide.md`); застосунки збираються `FROM` нього за digest. Автоматизації, що створює репозиторії чи пушить, у проєкті немає (рішення власника, 17.11.2026). Збірка теж лише ручна (рішення власника, 17.11.2026): compose його не збирає, а бере готовий `BASE_IMAGE` (за замовчуванням `zapik-base:local`).
 
 ## Consequences
 - Безпекові оновлення ОС робляться один раз для всіх сервісів.

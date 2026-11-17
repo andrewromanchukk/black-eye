@@ -7,13 +7,13 @@
 ## Стек
 Python 3.13.18 · Django 5.2 · Django REST Framework · PostgreSQL 16 · Docker / docker compose. Без CI/CD на цьому етапі.
 
-## Запуск локально — одна команда
+## Запуск локально
 Потрібен лише Docker (Docker Desktop або Docker Engine з Compose v2).
 ```bash
-docker compose up        # або: make up
+docker build -t zapik-base:local docker/base   # базовий образ — вручну, один раз (docs/registry-guide.md)
+docker compose up                              # або: make up
 ```
-Перший запуск збирає образ (кілька хвилин), далі стартує за секунди. Піднімаються:
-- `base` — збирається golden base image (`docker/base`), як контейнер не запускається;
+Compose базовий образ не збирає: бере `zapik-base:local` або образ із змінної `BASE_IMAGE`. Піднімаються:
 - `db` — PostgreSQL 16 (дані зберігаються у volume `pgdata`);
 - `web` — застосунок на http://localhost:8000; при старті сам застосовує міграції й завантажує демо-дані; код підхоплюється без перезапуску;
 - `scheduler` — щогодини надсилає нагадування про візити (локально SMS пишуться в лог).
@@ -29,8 +29,6 @@ docker compose up        # або: make up
 | `make reset` | Зупинити й **видалити** локальну базу |
 | `make logs` | Логи застосунку й планувальника |
 | `make test` | Тести всередині контейнера |
-| `make base` / `make base-push` | Зібрати golden base image / опублікувати в ECR |
-| `make app` / `make app-push` | Зібрати образ застосунку на base за digest / опублікувати в ECR |
 
 ## Залежності
 `requirements.in` — прямі залежності; `requirements.txt` — згенерований lock-файл з хешами (не редагувати вручну). Як оновлювати — `docs/build-environment.md`.
@@ -39,6 +37,7 @@ docker compose up        # або: make up
 ```bash
 docker compose up -d db
 cp .env.example .env
+set -a; . ./.env; set +a          # Django читає лише змінні оточення, файл .env сам не підхоплює
 pip install --require-hashes -r requirements.txt
 python manage.py migrate && python manage.py seed_demo
 python manage.py runserver
@@ -46,7 +45,7 @@ python manage.py runserver
 
 ## Тести
 ```bash
-python manage.py test tests        # 64 тести на PostgreSQL
+python manage.py test tests        # 64 тести на PostgreSQL; потрібні змінні оточення (DATABASE_URL), див. вище
 ```
 
 ## Структура
@@ -68,7 +67,7 @@ python manage.py test tests        # 64 тести на PostgreSQL
 | `docs/spec/01-mvp-spec.md` | Специфікація MVP (#1) |
 | `docs/issues/` | Тікети #2–#16 (опубліковані в GitHub Issues) |
 | `docs/adr/` | Архітектурні рішення |
-| `docs/registry-guide.md` | Гайд: зібрати образи й опублікувати в ECR |
+| `docs/registry-guide.md` | Гайд: зібрати base-образ і вручну завантажити у свій реєстр |
 | `docs/base-image.md` | Golden base image: шари, ECR, оновлення |
 | `docs/build-environment.md` | Зафіксоване середовище збірки й оновлення версій |
 | `docs/environments.md` | Середовища local/staging/production і стадії |

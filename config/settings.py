@@ -1,4 +1,5 @@
-"""Zapik settings. All environment-specific values come from env vars (see .env.example).
+"""Zapik settings. All environment-specific values come from environment variables only (see .env.example);
+no local files are read. docker compose passes them in; on the host, export them first.
 
 Environments: DJANGO_ENV = local | staging | production.
 """
@@ -16,7 +17,6 @@ env = environ.Env(
     SMS_BACKEND=(str, "apps.notifications.backends.LogSmsBackend"),
     SITE_URL=(str, "http://localhost:8000"),
 )
-environ.Env.read_env(BASE_DIR / ".env")
 
 DJANGO_ENV = env("DJANGO_ENV")
 DEBUG = env("DJANGO_DEBUG")
@@ -73,8 +73,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-# PostgreSQL is the database (docker compose service `db`). SQLite only as a last-resort fallback.
-DATABASES = {"default": env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}")}
+# PostgreSQL only (docker compose service `db`). DATABASE_URL is required: no fallback database.
+DATABASES = {"default": env.db("DATABASE_URL")}
 DATABASES["default"]["ATOMIC_REQUESTS"] = False
 
 AUTH_PASSWORD_VALIDATORS = [

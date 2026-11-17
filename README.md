@@ -37,6 +37,7 @@ Compose базовий образ не збирає: бере `zapik-base:local`
 ```bash
 docker compose up -d db
 cp .env.example .env
+set -a; . ./.env; set +a          # Django читає лише змінні оточення, файл .env сам не підхоплює
 pip install --require-hashes -r requirements.txt
 python manage.py migrate && python manage.py seed_demo
 python manage.py runserver
@@ -44,7 +45,7 @@ python manage.py runserver
 
 ## Тести
 ```bash
-python manage.py test tests        # 64 тести на PostgreSQL
+python manage.py test tests        # 64 тести на PostgreSQL; потрібні змінні оточення (DATABASE_URL), див. вище
 ```
 
 ## Структура

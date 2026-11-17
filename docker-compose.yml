@@ -2,7 +2,7 @@
 #
 #     docker compose up
 #
-# Builds the golden base image, then starts PostgreSQL, the web app (migrations + demo data on start) and the hourly
+# Requires the golden base image built beforehand (docs/registry-guide.md, step 2). Starts PostgreSQL, the web app (migrations + demo data on start) and the hourly
 # reminder scheduler. No .env needed; create one from .env.example to override.
 # Open http://localhost:8000 · demo panel: demo@zapik.pl / ZapikDemo2026
 
@@ -20,12 +20,6 @@ x-app-env: &app-env
   LOG_LEVEL: ${LOG_LEVEL:-INFO}
 
 services:
-  # Golden base image (docker/base). Built first, never started (scale: 0).
-  base:
-    build: ./docker/base
-    image: zapik-base:local
-    scale: 0
-
   db:
     # postgres:16.16-alpine3.24, multi-arch index digest, checked 2026-11-16 (see docs/build-environment.md)
     image: postgres:16.16-alpine3.24@sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e
@@ -46,8 +40,9 @@ services:
   web:
     build:
       context: .
-      additional_contexts:
-        base: service:base      # FROM base in ./Dockerfile -> the golden image above
+      args:
+        # Golden base image, built manually beforehand (docs/registry-guide.md). Compose does not build it.
+        BASE_IMAGE: ${BASE_IMAGE:-zapik-base:local}
     image: zapik-web:local
     environment:
       <<: *app-env

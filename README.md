@@ -7,13 +7,13 @@
 ## Стек
 Python 3.13.18 · Django 5.2 · Django REST Framework · PostgreSQL 16 · Docker / docker compose. Без CI/CD на цьому етапі.
 
-## Запуск локально — одна команда
+## Запуск локально
 Потрібен лише Docker (Docker Desktop або Docker Engine з Compose v2).
 ```bash
-docker compose up        # або: make up
+docker build -t zapik-base:local docker/base   # базовий образ — вручну, один раз (docs/registry-guide.md)
+docker compose up                              # або: make up
 ```
-Перший запуск збирає образ (кілька хвилин), далі стартує за секунди. Піднімаються:
-- `base` — збирається golden base image (`docker/base`), як контейнер не запускається;
+Compose базовий образ не збирає: бере `zapik-base:local` або образ із змінної `BASE_IMAGE`. Піднімаються:
 - `db` — PostgreSQL 16 (дані зберігаються у volume `pgdata`);
 - `web` — застосунок на http://localhost:8000; при старті сам застосовує міграції й завантажує демо-дані; код підхоплюється без перезапуску;
 - `scheduler` — щогодини надсилає нагадування про візити (локально SMS пишуться в лог).
@@ -29,7 +29,6 @@ docker compose up        # або: make up
 | `make reset` | Зупинити й **видалити** локальну базу |
 | `make logs` | Логи застосунку й планувальника |
 | `make test` | Тести всередині контейнера |
-| `make base` | Зібрати golden base image локально (нічого не публікує) |
 
 ## Залежності
 `requirements.in` — прямі залежності; `requirements.txt` — згенерований lock-файл з хешами (не редагувати вручну). Як оновлювати — `docs/build-environment.md`.

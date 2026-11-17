@@ -1,5 +1,5 @@
 # Shortcuts. The only command you need is `make up` (= docker compose up --build).
-.PHONY: up down reset logs test shell base
+.PHONY: up down reset logs test shell
 
 up:      ## build and start everything (db, web, scheduler)
 	docker compose up --build
@@ -18,6 +18,3 @@ test:    ## run the test suite inside the web container
 
 shell:
 	docker compose exec web python manage.py shell
-
-base:    ## build the golden base image locally (zapik-base:local)
-	scripts/base-image.sh

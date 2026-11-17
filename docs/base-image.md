@@ -22,8 +22,8 @@ python:3.13.18-slim-trixie@sha256:e48f…   ← офіційний образ (D
 
 | Де | Як потрапляє в збірку застосунку |
 |---|---|
-| Локально, `docker compose up` | Сервіс `base` (`scale: 0`, не запускається) збирає `zapik-base:local`; `web` отримує його як build context `base` (`FROM base`). Одна команда, як і раніше. |
-| Звичайний `docker build` | `make base && docker build --build-arg BASE_IMAGE=zapik-base:local .` |
+| Локально, `docker compose up` | Compose базовий образ **не збирає**: `web` будується `FROM ${BASE_IMAGE:-zapik-base:local}`. Образ треба заздалегідь зібрати вручну (`docs/registry-guide.md`, крок 2) або задати `BASE_IMAGE`. |
+| Звичайний `docker build` | `docker build -t zapik-base:local docker/base && docker build --build-arg BASE_IMAGE=zapik-base:local .` |
 | Staging / production | `docker build --build-arg BASE_IMAGE=<account>.dkr.ecr.<region>.amazonaws.com/zapik-base@sha256:<digest> .` — **завжди за digest** |
 
 ## Публікація в реєстр

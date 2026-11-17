@@ -216,6 +216,18 @@
 - Перевірено: `actionlint` пройшов без помилок. Не перевірено: реальний push в ECR.
 - Від власника потрібно: змінна `AWS_ROLE_ARN`; trust policy ролі має дозволяти `repo:andrewromanchukk/black-eye:ref:refs/heads/main`; у ролі мають бути права на push в `dev/zapik`.
 
+### 18:37 · AWS-роль для CI налаштовано
+- 👤 Створив IAM-роль для `black-eye`:
+  - trust policy: OIDC, лише `main`, `sub` у новому форматі з ID (`repo:andrewromanchukk@62422851/black-eye@1447344113:ref:refs/heads/main`);
+  - політики `push-dev-blackeye`, `pull-dev-blackeye`, `allowPushtoLightsail`;
+  - ARN ролі додав у змінну репозиторію `AWS_ROLE_ARN`.
+- 🤖 Переглянув налаштування:
+  - push-політики для CI вистачає;
+  - `pull-dev-blackeye` дублює вже наявні дозволи;
+  - `allowPushtoLightsail` (`ssm:SendCommand` + `AWS-RunShellScript`) дає `main` виконувати будь-які команди на сервері — це вже деплой, а не крок 4;
+  - імовірно, неправильний ARN `managed-instance/i-…`: для EC2 потрібен `ec2:…:instance/i-…` (агент не перевіряв).
+- ⚠️ Відкрито: чи ввімкнено в репозиторії «Use immutable subject claim» (інакше `sub` не збігатиметься) і чи ввімкнено незмінні теги в ECR. Агент це звідси перевірити не може.
+
 ---
 
 ## Матеріал для ретроспективи

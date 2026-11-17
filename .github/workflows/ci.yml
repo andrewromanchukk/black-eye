@@ -1,4 +1,5 @@
 # CI: on every push, build the app image and run the test suite inside that image against PostgreSQL.
+# On push to main (i.e. after a merge), the same tested image is pushed to ECR as <repo>:<full git sha>.
 # The base image comes from the repository variable BASE_IMAGE (Settings → Secrets and variables → Actions → Variables),
 # e.g. docker.io/andrewromanchukk/zapik-base:<tag>@sha256:<digest>.
 name: ci
@@ -9,10 +10,18 @@ on:
 permissions:
   contents: read
 
+env:
+  AWS_REGION: eu-central-1
+  ECR_REGISTRY: 720459752381.dkr.ecr.eu-central-1.amazonaws.com
+  ECR_REPOSITORY: dev/zapik
+
 jobs:
   build-and-test:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write   # OIDC token for AWS (used only on main)
 
     services:
       db:
@@ -58,3 +67,21 @@ jobs:
             -e SEED_DEMO=0 \
             zapik-web:ci-${{ github.sha }} \
             python manage.py test tests
+
+      # ---- main only: push the image that was just tested ----
+      - name: Configure AWS credentials (OIDC)
+        if: github.ref == 'refs/heads/main'
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Push image to ECR
+        if: github.ref == 'refs/heads/main'
+        run: |
+          aws ecr get-login-password --region "$AWS_REGION" \
+            | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+          IMAGE="$ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}"
+          docker tag zapik-web:ci-${{ github.sha }} "$IMAGE"
+          docker push "$IMAGE"
+          echo "Pushed $IMAGE" >> "$GITHUB_STEP_SUMMARY"

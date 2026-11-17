@@ -29,8 +29,7 @@ docker compose up        # або: make up
 | `make reset` | Зупинити й **видалити** локальну базу |
 | `make logs` | Логи застосунку й планувальника |
 | `make test` | Тести всередині контейнера |
-| `make base` / `make base-push` | Зібрати golden base image / опублікувати в ECR |
-| `make app` / `make app-push` | Зібрати образ застосунку на base за digest / опублікувати в ECR |
+| `make base` | Зібрати golden base image локально (нічого не публікує) |
 
 ## Залежності
 `requirements.in` — прямі залежності; `requirements.txt` — згенерований lock-файл з хешами (не редагувати вручну). Як оновлювати — `docs/build-environment.md`.
@@ -68,7 +67,7 @@ python manage.py test tests        # 64 тести на PostgreSQL
 | `docs/spec/01-mvp-spec.md` | Специфікація MVP (#1) |
 | `docs/issues/` | Тікети #2–#16 (опубліковані в GitHub Issues) |
 | `docs/adr/` | Архітектурні рішення |
-| `docs/registry-guide.md` | Гайд: зібрати образи й опублікувати в ECR |
+| `docs/registry-guide.md` | Гайд: зібрати base-образ і вручну завантажити у свій реєстр |
 | `docs/base-image.md` | Golden base image: шари, ECR, оновлення |
 | `docs/build-environment.md` | Зафіксоване середовище збірки й оновлення версій |
 | `docs/environments.md` | Середовища local/staging/production і стадії |

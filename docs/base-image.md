@@ -23,24 +23,18 @@ python:3.13.18-slim-trixie@sha256:e48f…   ← офіційний образ (D
 | Де | Як потрапляє в збірку застосунку |
 |---|---|
 | Локально, `docker compose up` | Сервіс `base` (`scale: 0`, не запускається) збирає `zapik-base:local`; `web` отримує його як build context `base` (`FROM base`). Одна команда, як і раніше. |
-| Звичайний `docker build` | `scripts/base-image.sh build && docker build --build-arg BASE_IMAGE=zapik-base:local .` |
+| Звичайний `docker build` | `make base && docker build --build-arg BASE_IMAGE=zapik-base:local .` |
 | Staging / production | `docker build --build-arg BASE_IMAGE=<account>.dkr.ecr.<region>.amazonaws.com/zapik-base@sha256:<digest> .` — **завжди за digest** |
 
-## Публікація в ECR
-
-```bash
-AWS_ACCOUNT_ID=123456789012 AWS_REGION=eu-central-1 scripts/base-image.sh push
-```
-- збирає для `linux/amd64` і `linux/arm64` (buildx), пушить у репозиторій `zapik-base` (створює його з `IMMUTABLE` тегами і скануванням уразливостей при пуші);
-- тег: `py3.13.18-trixie-YYYYMMDD-<git sha>`;
-- друкує рядок `BASE_IMAGE=…@sha256:…` — його й фіксуємо для збірок застосунку.
+## Публікація в реєстр
+Вручну, у вже створений вами репозиторій — див. `docs/registry-guide.md`. Автоматичного створення репозиторіїв чи пушу в проєкті немає.
 
 ## Оновлення (ритм: раз на місяць або одразу при CVE)
 1. Оновити потрібне в `docker/base/Dockerfile`: digest Python (див. `docs/build-environment.md`), `TINI_VERSION` (`https://api.ftp-master.debian.org/madison?package=tini&s=trixie`), `PIP_VERSION`.
 2. `docker compose up --build` + `make test`.
-3. `scripts/base-image.sh push` → новий digest → оновити `BASE_IMAGE` у налаштуваннях збірки staging/production.
+3. Опублікувати вручну (`docs/registry-guide.md`) → новий digest → оновити `BASE_IMAGE` у налаштуваннях збірки staging/production.
 
-⚠️ Точна версія apt-пакета зникає з дзеркал Debian, коли виходить новіша збірка (напр. `+b9`). Тоді збірка base-образу впаде з «version not found» — це сигнал свідомо оновити `TINI_VERSION`. Вже опубліковані в ECR образи це не зачіпає. Якщо потрібна повна відтворюваність apt навіть для старих версій — підключати `snapshot.debian.org` (поки не потрібно).
+⚠️ Точна версія apt-пакета зникає з дзеркал Debian, коли виходить новіша збірка (напр. `+b9`). Тоді збірка base-образу впаде з «version not found» — це сигнал свідомо оновити `TINI_VERSION`. Вже опубліковані образи це не зачіпає. Якщо потрібна повна відтворюваність apt навіть для старих версій — підключати `snapshot.debian.org` (поки не потрібно).
 
 ## Що свідомо не входить
 - залежності застосунку (`requirements.txt`) — в образі застосунку, щоб base не перезбирати на кожну зміну пакетів;

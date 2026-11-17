@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}Twoja rezerwacja — {{ workshop.name }}{% endblock %}{% block container_class %}container--narrow{% endblock %}{% block nav %}{% endblock %}
+{% block content %}<div class="stack">
+{% if booking.status == 'cancelled' %}<div class="alert alert--error">Rezerwacja anulowana</div>
+{% else %}<div class="alert alert--success">Rezerwacja potwierdzona</div>{% endif %}
+<div class="card"><dl class="summary">
+<dt>Warsztat</dt><dd>{{ workshop.name }}</dd><dt>Adres</dt><dd>{{ workshop.address }}</dd>
+<dt>Usługa</dt><dd>{{ booking.service.name }}</dd><dt>Termin</dt><dd>{{ start|date:"l, j E Y" }}, {{ start|time:"H:i" }}</dd>
+<dt>Auto</dt><dd class="mono">{{ booking.plate }}</dd><dt>Telefon warsztatu</dt><dd><a href="tel:{{ workshop.phone }}">{{ workshop.phone }}</a></dd></dl></div>
+<p class="small muted">Zapisz ten link — pozwala anulować wizytę.</p>
+{% if can_cancel %}<form method="post">{% csrf_token %}<button class="btn btn--danger btn--block">Anuluj rezerwację</button></form>{% endif %}
+<a class="btn btn--ghost btn--block" href="{% url 'web:public_booking' workshop.slug %}">Nowa rezerwacja</a>
+</div>{% endblock %}

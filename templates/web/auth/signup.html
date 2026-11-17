@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}Załóż konto — Zapik{% endblock %}{% block container_class %}container--narrow{% endblock %}
+{% block content %}
+<div class="card"><h1>Załóż konto warsztatu</h1><p class="muted">30 dni za darmo, bez karty płatniczej.</p>
+<form method="post" novalidate>{% csrf_token %}{% include "web/_form_fields.html" %}
+<div class="field"><button class="btn btn--cta btn--block">Utwórz warsztat</button></div></form>
+<p class="small muted">Masz konto? <a href="{% url 'web:login' %}">Zaloguj się</a></p></div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "web/panel/_base.html" %}{% block ptitle %}Przypomnienia{% endblock %}
+{% block content %}<div class="stack">
+<h1>Przypomnienia sezonowe</h1>
+<p class="muted">Klienci, których opony leżą w przechowalni. Zaznacz i wyślij SMS z linkiem do zapisu.</p>
+<nav class="row" aria-label="Sezon">{% for v, l in seasons %}<a class="btn btn--sm {% if v == season %}btn--primary{% else %}btn--ghost{% endif %}" href="?season={{ v }}">{{ l }}</a>{% endfor %}</nav>
+{% if preview %}<div class="card card--flat"><p class="label">Podgląd SMS</p><p class="small">{{ preview }}</p></div>{% endif %}
+<form method="post">{% csrf_token %}<input type="hidden" name="season" value="{{ season }}">
+<div class="table-wrap"><table class="table"><thead><tr><th scope="col"><span class="sr-only">Wybierz</span></th><th scope="col">Auto</th><th scope="col">Klient</th><th scope="col">Opony</th><th scope="col">Przypomniano</th></tr></thead><tbody>
+{% for d in candidates %}<tr><td><input type="checkbox" name="deposit" value="{{ d.pk }}" aria-label="Wybierz {{ d.plate }}"{% if not d.reminded_at %} checked{% endif %} style="width:20px;height:20px"></td><td class="mono">{{ d.plate }}</td><td>{{ d.customer.name }}<br><span class="small muted">{{ d.customer.phone }}</span></td><td class="small">{{ d.description }}</td><td>{% if d.reminded_at %}<span class="badge badge--completed">{{ d.reminded_at|date:"d.m H:i" }}</span>{% else %}—{% endif %}</td></tr>
+{% empty %}<tr><td colspan="5">Brak opon tego typu w przechowalni.</td></tr>{% endfor %}</tbody></table></div>
+{% if candidates %}<br><button class="btn btn--cta">Wyślij przypomnienia</button>{% endif %}
+</form></div>{% endblock %}

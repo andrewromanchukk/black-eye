@@ -1,0 +1,82 @@
+# One command to run Zapik locally:
+#
+#     docker compose up
+#
+# Builds the golden base image, then starts PostgreSQL, the web app (migrations + demo data on start) and the hourly
+# reminder scheduler. No .env needed; create one from .env.example to override.
+# Open http://localhost:8000 · demo panel: demo@zapik.pl / ZapikDemo2026
+
+x-app-env: &app-env
+  DJANGO_ENV: ${DJANGO_ENV:-local}
+  DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-local-dev-only-not-secret}
+  DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,web}
+  DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
+  SITE_URL: ${SITE_URL:-http://localhost:8000}
+  DATABASE_URL: postgres://${POSTGRES_USER:-zapik}:${POSTGRES_PASSWORD:-zapik}@db:5432/${POSTGRES_DB:-zapik}
+  SMS_BACKEND: ${SMS_BACKEND:-apps.notifications.backends.LogSmsBackend}
+  SMSAPI_TOKEN: ${SMSAPI_TOKEN:-}
+  SMSAPI_SENDER: ${SMSAPI_SENDER:-}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+services:
+  # Golden base image (docker/base). Built first, never started (scale: 0).
+  base:
+    build: ./docker/base
+    image: zapik-base:local
+    scale: 0
+
+  db:
+    # postgres:16.16-alpine3.24, multi-arch index digest, checked 2026-11-16 (see docs/build-environment.md)
+    image: postgres:16.16-alpine3.24@sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-zapik}
+      POSTGRES_USER: ${POSTGRES_USER:-zapik}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zapik}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"   # change POSTGRES_PORT if 5432 is busy on your machine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build:
+      context: .
+      additional_contexts:
+        base: service:base      # FROM base in ./Dockerfile -> the golden image above
+    image: zapik-web:local
+    environment:
+      <<: *app-env
+      RUN_MIGRATIONS: "1"
+      SEED_DEMO: ${SEED_DEMO:-1}
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    volumes:
+      - .:/app            # live code reload
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  scheduler:
+    image: zapik-web:local
+    environment: *app-env
+    command: ["sh", "-c", "while true; do python manage.py send_visit_reminders; sleep 3600; done"]
+    volumes:
+      - .:/app
+    depends_on:
+      web:
+        condition: service_healthy
+
+volumes:
+  pgdata:

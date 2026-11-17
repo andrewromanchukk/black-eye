@@ -1,0 +1,14 @@
+{% if form.non_field_errors %}<div class="alert alert--error" role="alert">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div><br>{% endif %}
+{% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}
+<div class="field{% if field.errors %} field--error{% endif %}">
+  {% if field.widget_type == 'checkbox' %}
+    <label class="checkbox">{{ field }} <span>{{ field.label }}</span></label>
+  {% elif field.widget_type == 'checkboxselectmultiple' %}
+    <fieldset class="stack-sm" style="border:0;padding:0;margin:0"><legend class="label">{{ field.label }}</legend>
+    {% for opt in field %}<label class="checkbox">{{ opt.tag }} <span>{{ opt.choice_label }}</span></label>{% empty %}<span class="help">Brak stanowisk.</span>{% endfor %}</fieldset>
+  {% else %}
+    <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+  {% endif %}
+  {% if field.help_text %}<span class="help" id="{{ field.auto_id }}_help">{{ field.help_text|safe }}</span>{% endif %}
+  {% for e in field.errors %}<span class="error">{{ e }}</span>{% endfor %}
+</div>{% endif %}{% endfor %}

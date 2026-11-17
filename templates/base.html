@@ -1,0 +1,38 @@
+{% load static %}<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Zapik — zapisy online dla warsztatów{% endblock %}</title>
+<meta name="description" content="{% block description %}Zapisy online na wymianę opon i serwis. Klient wybiera wolny termin, warsztat widzi grafik stanowisk.{% endblock %}">
+<link rel="icon" href="{% static 'favicon.svg' %}" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'design/tokens.css' %}">
+<link rel="stylesheet" href="{% static 'design/kit.css' %}">
+</head>
+<body>
+<a class="skip-link" href="#main">Przejdź do treści</a>
+<header class="topbar"><div class="container topbar__inner">
+  {% block brand %}<a class="brand" href="{% url 'web:landing' %}"><img class="brand__mark" src="{% static 'favicon.svg' %}" alt="">Zapik</a>{% endblock %}
+  {% block nav %}
+  <nav class="nav" aria-label="Główna">
+    {% if user.is_authenticated %}<a href="{% url 'web:schedule' %}">Panel</a>
+    {% else %}<a href="{% url 'web:login' %}">Zaloguj</a><a href="{% url 'web:signup' %}">Załóż konto</a>{% endif %}
+  </nav>
+  {% endblock %}
+</div></header>
+<main id="main" class="main">
+  <div class="container {% block container_class %}{% endblock %}">
+    {% if messages %}<div class="stack-sm" role="status">{% for m in messages %}<div class="alert alert--{% if m.tags == 'error' %}error{% else %}success{% endif %}">{{ m }}</div>{% endfor %}</div><br>{% endif %}
+    {% block content %}{% endblock %}
+  </div>
+  {% block fullwidth %}{% endblock %}
+</main>
+<footer class="footer"><div class="container row row--between">
+  <span>© Zapik {% now "Y" %}</span>
+  <span><a href="{% url 'web:terms' %}">Regulamin</a> · <a href="{% url 'web:privacy' %}">Polityka prywatności</a></span>
+</div></footer>
+</body>
+</html>

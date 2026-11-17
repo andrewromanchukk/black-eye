@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Regulamin — Zapik{% endblock %}
+{% block content %}
+<article class="prose">
+<div class="alert alert--info">Wersja robocza prototypu. Dokument wymaga weryfikacji prawnika przed uruchomieniem usługi.</div>
+<h1>Regulamin serwisu Zapik</h1>
+<h2>1. Postanowienia ogólne</h2>
+<ol>
+<li>Serwis Zapik (dalej „Serwis”) prowadzi [NAZWA FIRMY, adres, NIP, KRS/CEIDG] (dalej „Usługodawca”).</li>
+<li>Regulamin określa zasady korzystania z Serwisu przez warsztaty (dalej „Warsztat”) oraz osoby rezerwujące wizyty (dalej „Klient”), zgodnie z ustawą z dnia 18 lipca 2002 r. o świadczeniu usług drogą elektroniczną.</li>
+</ol>
+<h2>2. Usługi</h2>
+<ol>
+<li>Usługodawca udostępnia Warsztatom panel do zarządzania rezerwacjami, stanowiskami, usługami i przechowalnią opon oraz publiczną stronę zapisów.</li>
+<li>Klient może zarezerwować wizytę bez zakładania konta. Umowa o wykonanie usługi warsztatowej jest zawierana wyłącznie między Klientem a Warsztatem.</li>
+</ol>
+<h2>3. Konto Warsztatu i płatności</h2>
+<ol>
+<li>Założenie konta wymaga podania adresu e-mail, hasła i danych warsztatu.</li>
+<li>Po okresie próbnym korzystanie z Serwisu jest płatne zgodnie z cennikiem. [UZUPEŁNIĆ: okres rozliczeniowy, faktury, wypowiedzenie.]</li>
+</ol>
+<h2>4. Rezerwacje</h2>
+<ol>
+<li>Rezerwacja jest potwierdzana na ekranie i może być potwierdzona wiadomością SMS.</li>
+<li>Klient może anulować rezerwację za pomocą linku otrzymanego po rezerwacji, do czasu rozpoczęcia wizyty.</li>
+</ol>
+<h2>5. Reklamacje</h2>
+<p>Reklamacje dotyczące działania Serwisu można zgłaszać na adres [E-MAIL]. Odpowiedź udzielana jest w terminie 14 dni.</p>
+<h2>6. Dane osobowe</h2>
+<p>Zasady przetwarzania danych opisuje <a href="{% url 'web:privacy' %}">Polityka prywatności</a>.</p>
+<h2>7. Postanowienia końcowe</h2>
+<p>[UZUPEŁNIĆ: zmiany regulaminu, prawo właściwe, data wejścia w życie.]</p>
+</article>
+{% endblock %}

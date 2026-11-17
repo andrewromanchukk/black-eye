@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block title %}Rezerwacja — {{ workshop.name }}{% endblock %}{% block container_class %}container--narrow{% endblock %}{% block nav %}{% endblock %}
+{% block content %}<div class="stack">
+{% include "web/public/_header.html" %}
+<p><a href="{{ slots_url }}">‹ Zmień termin</a></p>
+<div class="card card--flat"><dl class="summary"><dt>Usługa</dt><dd>{{ service.name }}</dd><dt>Termin</dt><dd>{{ start|date:"l, j E" }}, {{ start|time:"H:i" }}</dd>{% if service.price is not None %}<dt>Cena</dt><dd>{{ service.price|floatformat:"-2" }} zł</dd>{% endif %}</dl></div>
+<form class="card" method="post" novalidate>{% csrf_token %}<input type="hidden" name="start" value="{{ start|date:'c' }}">
+{% include "web/_form_fields.html" %}
+<p class="help">Szczegóły w <a href="{% url 'web:privacy' %}" target="_blank" rel="noopener">polityce prywatności</a>.</p>
+<div class="field"><button class="btn btn--cta btn--block">Rezerwuję {{ start|date:"j.m" }}, {{ start|time:"H:i" }}</button></div></form>
+</div>{% endblock %}

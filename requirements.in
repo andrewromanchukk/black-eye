@@ -1,0 +1,8 @@
+# Direct dependencies. Edit this file, then regenerate the lock file:
+#   pip-compile --generate-hashes --strip-extras --output-file=requirements.txt requirements.in
+# (run with Python 3.13, e.g. inside the web container)
+Django==5.2.19
+djangorestframework==3.18.3
+django-environ==0.14.0
+psycopg[binary]==3.3.9
+gunicorn==27.0.1

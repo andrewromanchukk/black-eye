@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block title %}Zapisy — {{ workshop.name }}{% endblock %}{% block container_class %}container--narrow{% endblock %}{% block nav %}{% endblock %}
+{% block content %}<div class="stack">
+{% include "web/public/_header.html" %}
+<h2>Wybierz usługę</h2>
+{% if services %}<ul class="option-list">{% for s in services %}
+<li><a class="option" href="{% url 'web:public_slots' workshop.slug s.pk %}"><span><span class="option__title">{{ s.name }}</span><br><span class="option__meta">{{ s.duration_min }} min</span></span>{% if s.price is not None %}<span class="option__price">{{ s.price|floatformat:"-2" }} zł</span>{% endif %}</a></li>
+{% endfor %}</ul>{% else %}<div class="empty">Warsztat nie udostępnił jeszcze usług do rezerwacji. Zadzwoń: {{ workshop.phone }}</div>{% endif %}
+</div>{% endblock %}

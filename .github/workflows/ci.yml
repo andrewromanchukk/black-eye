@@ -68,6 +68,40 @@ jobs:
             zapik-web:ci-${{ github.sha }} \
             python manage.py test tests
 
+      # ---- E2E: release checks 1–2 in a real browser, against the image that was just built ----
+      - name: Start app for E2E
+        run: |
+          docker run -d --name zapik-e2e --network host \
+            -e DJANGO_ENV=local \
+            -e DJANGO_DEBUG=True \
+            -e DJANGO_SECRET_KEY=ci-only-not-secret \
+            -e DATABASE_URL=postgres://zapik:zapik@localhost:5432/zapik \
+            -e RUN_MIGRATIONS=1 \
+            -e SEED_DEMO=1 \
+            zapik-web:ci-${{ github.sha }} \
+            python manage.py runserver 0.0.0.0:8000 --noreload
+          for i in $(seq 1 60); do
+            curl -fsS http://localhost:8000/healthz >/dev/null && exit 0
+            sleep 2
+          done
+          docker logs zapik-e2e
+          exit 1
+
+      - name: Install Playwright (CI only, not in the image)
+        run: |
+          python3 -m venv /tmp/e2e-venv
+          /tmp/e2e-venv/bin/pip install --require-hashes --no-deps -r e2e/requirements.txt
+          /tmp/e2e-venv/bin/python -m playwright install --with-deps chromium
+
+      - name: E2E tests (browser)
+        env:
+          E2E_BASE_URL: http://localhost:8000
+        run: /tmp/e2e-venv/bin/python -m unittest discover -s e2e -v
+
+      - name: App logs (on failure)
+        if: failure()
+        run: docker logs zapik-e2e || true
+
       # ---- main only: push the image that was just tested ----
       - name: Configure AWS credentials (OIDC)
         if: github.ref == 'refs/heads/main'

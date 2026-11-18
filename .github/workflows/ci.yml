@@ -6,8 +6,6 @@ name: ci
 
 on:
   push:
-    paths-ignore:
-      - 'docs/journal/**'   # journal-only commits do not run CI
 
 permissions:
   contents: read

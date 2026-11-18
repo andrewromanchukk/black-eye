@@ -72,7 +72,6 @@ python manage.py test tests        # 64 тести на PostgreSQL; потріб
 | `docs/build-environment.md` | Зафіксоване середовище збірки й оновлення версій |
 | `docs/environments.md` | Середовища local/staging/production і стадії |
 | `GLOSSARY.md` | Словник домену |
-| `docs/journal/JOURNAL.md` | Журнал проєкту для ретроспективи |
 | `CLAUDE.md` | Інструкції для агента (включно з веденням журналу) |
 
 ## REST API v1 (коротко)

@@ -1,6 +1,6 @@
 # PR checks: on every pull request into main, build the app image and test it:
 # unit tests inside the image against PostgreSQL, then E2E in a real browser against the running image.
-# The job name `build-and-test` is the required status check in the main ruleset — do not rename it.
+# The job name "PR · unit tests + E2E" is the required status check in the main ruleset: rename both together.
 # Nothing is pushed anywhere. After the merge, release.yml builds and pushes the image.
 # The base image comes from the repository variable BASE_IMAGE (Settings → Secrets and variables → Actions → Variables),
 # e.g. docker.io/andrewromanchukk/zapik-base:<tag>@sha256:<digest>.
@@ -14,7 +14,8 @@ permissions:
   contents: read
 
 jobs:
-  build-and-test:
+  test:
+    name: PR · unit tests + E2E
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 

@@ -16,7 +16,8 @@ env:
   ECR_REPOSITORY: dev/zapik
 
 jobs:
-  build-test-push:
+  release:
+    name: Release · test + push to ECR
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:

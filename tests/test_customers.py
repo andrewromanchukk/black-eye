@@ -58,3 +58,41 @@ class StorageSearchTests(TestCase):
                                  description="x")
         self.assertEqual([d.plate for d in storage.search(ws, "kr12")], ["KR1234"])
         self.assertEqual([d.plate for d in storage.search(ws, "501 222")], ["WX7788K"])
+
+
+class CustomerSearchEdgeCasesTests(TestCase):
+    def setUp(self):
+        self.ws, self.service = make_workshop()
+        engine.book(self.ws, self.service, at(8), customer_name="Łukasz Żółć", phone="501222333", plate="WX7788K",
+                    now=NOW)
+        engine.book(self.ws, self.service, at(10), customer_name="Łukasz Żółć", phone="501222333", plate="WX7788K",
+                    now=NOW)
+        engine.book(self.ws, self.service, at(12), customer_name="Ola", phone="698111000", plate="KR4P123", now=NOW)
+
+    def names(self, q):
+        return [c.name for c in customers.search(self.ws, q)]
+
+    def test_name_is_case_insensitive_with_polish_letters(self):
+        self.assertEqual(self.names("łukasz"), ["Łukasz Żółć"])
+        self.assertEqual(self.names("ŻÓŁĆ"), ["Łukasz Żółć"])
+
+    def test_phone_in_any_format(self):
+        for q in ("+48 501 222 333", "48501222333", "501-222-333", "222 333"):
+            with self.subTest(q=q):
+                self.assertEqual(self.names(q), ["Łukasz Żółć"])
+
+    def test_too_short_digit_query_does_not_match_phones(self):
+        self.assertEqual(self.names("50"), [])
+
+    def test_plate_lowercase_with_spaces(self):
+        self.assertEqual(self.names("kr 4p"), ["Ola"])
+        self.assertEqual(self.names("wx 7788 k"), ["Łukasz Żółć"])
+
+    def test_customer_with_many_bookings_is_listed_once(self):
+        self.assertEqual(self.names("WX7788K"), ["Łukasz Żółć"])
+
+    def test_blank_query_returns_everyone(self):
+        self.assertCountEqual(self.names("   "), ["Ola", "Łukasz Żółć"])
+
+    def test_no_match(self):
+        self.assertEqual(self.names("Zenon"), [])

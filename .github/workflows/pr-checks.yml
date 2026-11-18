@@ -93,19 +93,34 @@ jobs:
           docker logs zapik-e2e
           exit 1
 
-      - name: Cache pip and Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      # Playwright Python package from cache. The browser is NOT downloaded: the runner image already has Google Chrome
+      # with all its system libraries, so no `playwright install --with-deps` (that apt-installed ~100 packages every run).
+      - name: Restore pip cache
+        id: e2e-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: |
-            ~/.cache/pip
-            ~/.cache/ms-playwright
-          key: e2e-${{ runner.os }}-${{ hashFiles('e2e/requirements.txt') }}
+          path: ~/.cache/pip
+          key: e2e-pip-${{ runner.os }}-${{ hashFiles('e2e/requirements.txt') }}
 
       - name: Install Playwright (CI only, not in the image)
         run: |
           python3 -m venv /tmp/e2e-venv
           /tmp/e2e-venv/bin/pip install --require-hashes --no-deps -r e2e/requirements.txt
-          /tmp/e2e-venv/bin/python -m playwright install --with-deps chromium
+          CHROME="$(command -v google-chrome || true)"
+          if [ -n "$CHROME" ]; then
+            echo "E2E_CHROME=$CHROME" >> "$GITHUB_ENV"
+            "$CHROME" --version
+          else  # fallback if the runner image ever drops Chrome
+            /tmp/e2e-venv/bin/python -m playwright install --with-deps chromium
+          fi
+
+      # Saved even when tests fail (plain actions/cache saves only on success).
+      - name: Save pip cache
+        if: always() && steps.e2e-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pip
+          key: ${{ steps.e2e-cache.outputs.cache-primary-key }}
 
       - name: E2E tests (browser)
         env:

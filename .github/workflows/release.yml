@@ -1,6 +1,6 @@
-# Release: after a merge into main, build the app image, re-run the unit tests inside it
-# (the merge commit can differ from what the PR tested) and push that exact image to ECR as <repo>:<full git sha>.
-# E2E already ran in pr-checks.yml on the PR. ECR tags are immutable; only this workflow's role may push.
+# Release: after a merge into main, build the app image, run ALL tests against it again — unit tests inside the image
+# and E2E in a browser (the merge commit can differ from what the PR tested) — and only then push that exact image
+# to ECR as <repo>:<full git sha>. ECR tags are immutable; only this workflow's role may push.
 name: release
 
 on:
@@ -75,6 +75,48 @@ jobs:
             -e SEED_DEMO=0 \
             zapik-web:ci-${{ github.sha }} \
             python manage.py test tests
+
+      # ---- E2E: release checks 1–2 in a real browser, against the image that was just built ----
+      - name: Start app for E2E
+        run: |
+          docker run -d --name zapik-e2e --network host \
+            -e DJANGO_ENV=local \
+            -e DJANGO_DEBUG=True \
+            -e DJANGO_SECRET_KEY=ci-only-not-secret \
+            -e DATABASE_URL=postgres://zapik:zapik@localhost:5432/zapik \
+            -e RUN_MIGRATIONS=1 \
+            -e SEED_DEMO=1 \
+            zapik-web:ci-${{ github.sha }} \
+            python manage.py runserver 0.0.0.0:8000 --noreload
+          for i in $(seq 1 60); do
+            curl -fsS http://localhost:8000/healthz >/dev/null && exit 0
+            sleep 2
+          done
+          docker logs zapik-e2e
+          exit 1
+
+      - name: Cache pip and Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/ms-playwright
+          key: e2e-${{ runner.os }}-${{ hashFiles('e2e/requirements.txt') }}
+
+      - name: Install Playwright (CI only, not in the image)
+        run: |
+          python3 -m venv /tmp/e2e-venv
+          /tmp/e2e-venv/bin/pip install --require-hashes --no-deps -r e2e/requirements.txt
+          /tmp/e2e-venv/bin/python -m playwright install --with-deps chromium
+
+      - name: E2E tests (browser)
+        env:
+          E2E_BASE_URL: http://localhost:8000
+        run: /tmp/e2e-venv/bin/python -m unittest discover -s e2e -v
+
+      - name: App logs (on failure)
+        if: failure()
+        run: docker logs zapik-e2e || true
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0

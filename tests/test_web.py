@@ -174,3 +174,21 @@ class CustomerCardTests(TestCase):
         b = engine.book(ws, service, slot.start, customer_name="Anna", phone="501222333", plate="X1")
         self.client.login(username="b@example.com", password="Haslo!2345")
         self.assertEqual(self.client.get(reverse("web:customer_detail", args=[b.customer_id])).status_code, 404)
+
+
+class RegressionTests(TestCase):
+    """Bugs that were fixed once must not come back. Each test names the bug it guards."""
+
+    def test_bug_public_page_opened_today_without_free_slots(self):
+        # Bug (13.11): late in the day the slot page opened "today" with no free times instead of the next free day.
+        from datetime import datetime
+        from unittest import mock
+        from zoneinfo import ZoneInfo
+
+        ws, service = make_workshop()
+        monday_evening = datetime(2026, 11, 16, 16, 30, tzinfo=ZoneInfo("Europe/Warsaw"))  # last 60-min slot was 16:00
+        with mock.patch("django.utils.timezone.now", return_value=monday_evening):
+            r = self.client.get(reverse("web:public_slots", args=[ws.slug, service.pk]))
+        self.assertEqual(r.context["day"].isoformat(), "2026-11-17")
+        self.assertContains(r, 'class="slot"')
+        self.assertNotContains(r, "Brak wolnych terminów")

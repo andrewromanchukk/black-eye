@@ -28,3 +28,4 @@
 - Задачі — GitHub Issues (`ready-for-agent`); публікація через `scripts/publish_issues.sh` (REST API).
 - Факти про ринок — лише з джерелами; якщо не знайдено, так і писати.
 - Тести: `python manage.py test tests` (на PostgreSQL).
+- Виправлення бага не завершене без регресійного тесту, який падає без виправлення: unit-тест у `tests/` (клас `RegressionTests` у `tests/test_web.py` або поруч із модулем), а для вигляду в браузері — E2E у `e2e/test_regressions.py`.

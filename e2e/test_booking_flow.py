@@ -47,7 +47,8 @@ class BookingFlowE2E(unittest.TestCase):
         return page
 
     def assert_no_horizontal_scroll(self, page):
-        overflow = page.evaluate("document.documentElement.scrollWidth - window.innerWidth")
+        # clientWidth, not innerWidth: a phone browser widens innerWidth to the content and hides the overflow.
+        overflow = page.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth")
         self.assertLessEqual(overflow, 0, f"{page.url}: page is {overflow}px wider than the screen")
 
     def book_slot(self, page, device, plate):

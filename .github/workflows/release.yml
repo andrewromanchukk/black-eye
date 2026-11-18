@@ -67,14 +67,17 @@ jobs:
 
       - name: Run tests inside the image
         run: |
+          mkdir -p test-results && chmod 777 test-results   # the image runs as uid 10001
           docker run --rm --network host \
+            -v "$PWD/test-results:/test-results" \
+            -e JUNIT_XML=/test-results/unit.xml \
             -e DJANGO_ENV=local \
             -e DJANGO_SECRET_KEY=ci-only-not-secret \
             -e DATABASE_URL=postgres://zapik:zapik@localhost:5432/zapik \
             -e RUN_MIGRATIONS=0 \
             -e SEED_DEMO=0 \
             zapik-web:ci-${{ github.sha }} \
-            python manage.py test tests
+            python manage.py test tests --testrunner tests.junit.DjangoJUnitRunner
 
       # ---- E2E: release checks 1–2 in a real browser, against the image that was just built ----
       - name: Start app for E2E
@@ -95,28 +98,66 @@ jobs:
           docker logs zapik-e2e
           exit 1
 
-      - name: Cache pip and Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      # Playwright Python package from cache. The browser is NOT downloaded: the runner image already has Google Chrome
+      # with all its system libraries, so no `playwright install --with-deps` (that apt-installed ~100 packages every run).
+      - name: Restore pip cache
+        id: e2e-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: |
-            ~/.cache/pip
-            ~/.cache/ms-playwright
-          key: e2e-${{ runner.os }}-${{ hashFiles('e2e/requirements.txt') }}
+          path: ~/.cache/pip
+          key: e2e-pip-${{ runner.os }}-${{ hashFiles('e2e/requirements.txt') }}
 
       - name: Install Playwright (CI only, not in the image)
         run: |
           python3 -m venv /tmp/e2e-venv
           /tmp/e2e-venv/bin/pip install --require-hashes --no-deps -r e2e/requirements.txt
-          /tmp/e2e-venv/bin/python -m playwright install --with-deps chromium
+          CHROME="$(command -v google-chrome || true)"
+          if [ -n "$CHROME" ]; then
+            echo "E2E_CHROME=$CHROME" >> "$GITHUB_ENV"
+            "$CHROME" --version
+          else  # fallback if the runner image ever drops Chrome
+            /tmp/e2e-venv/bin/python -m playwright install --with-deps chromium
+          fi
+
+      # Saved even when tests fail (plain actions/cache saves only on success).
+      - name: Save pip cache
+        if: always() && steps.e2e-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pip
+          key: ${{ steps.e2e-cache.outputs.cache-primary-key }}
 
       - name: E2E tests (browser)
         env:
           E2E_BASE_URL: http://localhost:8000
-        run: /tmp/e2e-venv/bin/python -m unittest discover -s e2e -v
+          E2E_ARTIFACTS: test-results/e2e-failures   # screenshots + Playwright traces of failed tests
+        run: /tmp/e2e-venv/bin/python -m tests.junit e2e test-results/e2e.xml
 
       - name: App logs (on failure)
         if: failure()
         run: docker logs zapik-e2e || true
+
+      # ---- test record: JUnit XML always, screenshots + traces when E2E failed ----
+      - name: Test summary
+        if: always()
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import glob, xml.etree.ElementTree as ET
+          print("| Suite | Tests | Failed | Skipped | Time, s |\n|---|---|---|---|---|")
+          for path in sorted(glob.glob("test-results/*.xml")):
+              s = ET.parse(path).getroot()[0]
+              failed = int(s.get("failures")) + int(s.get("errors"))
+              print(f"| {s.get('name')} | {s.get('tests')} | {failed} | {s.get('skipped')} | {s.get('time')} |")
+          PY
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-results-release-${{ github.sha }}
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 90   # longest GitHub allows: the test record of the image pushed to ECR
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0

@@ -4,6 +4,7 @@ Unit tests (Django):
     python manage.py test tests --testrunner tests.junit.DjangoJUnitRunner      # JUNIT_XML=path (default junit.xml)
 E2E (plain unittest):
     python -m tests.junit e2e test-results/e2e.xml                              # discover <dir>, write <xml>
+    python -m tests.junit e2e test-results/smoke.xml 'smoke*.py'                # optional file pattern
 
 The file is the record of which tests ran and how they ended; CI uploads it as an artifact.
 """
@@ -107,9 +108,11 @@ if DiscoverRunner is not None:
 
 def main(argv):
     start_dir, path = argv[1], argv[2]
-    suite = unittest.defaultTestLoader.discover(start_dir, top_level_dir=start_dir)
+    pattern = argv[3] if len(argv) > 3 else "test*.py"
+    name = os.path.basename(start_dir.rstrip("/")) if len(argv) <= 3 else pattern.split("*")[0].rstrip("_.")
+    suite = unittest.defaultTestLoader.discover(start_dir, pattern=pattern, top_level_dir=start_dir)
     result = unittest.TextTestRunner(resultclass=JUnitResult, verbosity=2).run(suite)
-    write_junit(result.records, path, os.path.basename(start_dir.rstrip("/")))
+    write_junit(result.records, path, name)
     print(f"JUnit XML: {path} ({summary_line(result.records)})")
     return 0 if result.wasSuccessful() else 1
 

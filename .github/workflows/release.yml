@@ -133,6 +133,14 @@ jobs:
           E2E_ARTIFACTS: test-results/e2e-failures   # screenshots + Playwright traces of failed tests
         run: /tmp/e2e-venv/bin/python -m tests.junit e2e test-results/e2e.xml
 
+      # The same read-only smoke test that will run against ECS after each deploy (when CD exists),
+      # here against the image just built: /healthz, public booking page, owner login.
+      - name: Smoke test
+        env:
+          SMOKE_BASE_URL: http://localhost:8000
+          E2E_ARTIFACTS: test-results/e2e-failures
+        run: /tmp/e2e-venv/bin/python -m tests.junit e2e test-results/smoke.xml 'smoke*.py'
+
       - name: App logs (on failure)
         if: failure()
         run: docker logs zapik-e2e || true

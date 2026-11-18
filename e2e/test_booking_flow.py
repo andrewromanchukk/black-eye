@@ -19,6 +19,8 @@ from urllib.parse import parse_qs, urlparse
 
 from playwright.sync_api import expect, sync_playwright
 
+from artifacts import record_on_failure
+
 BASE_URL = os.environ.get("E2E_BASE_URL", "http://localhost:8000").rstrip("/")
 SLUG = "opony-kowalski"
 SERVICE = "Wyważanie kół"
@@ -45,6 +47,7 @@ class BookingFlowE2E(unittest.TestCase):
     def new_page(self, device):
         context = self.browser.new_context(base_url=BASE_URL, locale="pl-PL", **VIEWPORTS[device])
         self.addCleanup(context.close)
+        record_on_failure(self, context)
         page = context.new_page()
         page.set_default_timeout(10_000)
         return page

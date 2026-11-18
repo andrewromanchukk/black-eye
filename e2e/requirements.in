@@ -1,0 +1,2 @@
+# E2E browser tests only (CI runner / developer machine). Not installed in the app image.
+playwright==1.63.0

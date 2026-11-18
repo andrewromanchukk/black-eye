@@ -47,10 +47,18 @@ jobs:
           fi
           echo "Base image: $BASE_IMAGE"
 
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # Docker layers are cached in the GitHub Actions cache: unchanged layers (e.g. pip install) are reused.
       - name: Build image
-        env:
-          BASE_IMAGE: ${{ vars.BASE_IMAGE }}
-        run: docker build --build-arg BASE_IMAGE="$BASE_IMAGE" -t zapik-web:ci-${{ github.sha }} .
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          build-args: BASE_IMAGE=${{ vars.BASE_IMAGE }}
+          tags: zapik-web:ci-${{ github.sha }}
+          load: true
+          cache-from: type=gha,scope=zapik-web
+          cache-to: type=gha,scope=zapik-web,mode=max
 
       - name: Run tests inside the image
         run: |
@@ -81,6 +89,14 @@ jobs:
           done
           docker logs zapik-e2e
           exit 1
+
+      - name: Cache pip and Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/ms-playwright
+          key: e2e-${{ runner.os }}-${{ hashFiles('e2e/requirements.txt') }}
 
       - name: Install Playwright (CI only, not in the image)
         run: |

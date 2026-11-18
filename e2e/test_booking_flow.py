@@ -115,21 +115,31 @@ class BookingFlowE2E(unittest.TestCase):
         return page
 
     def run_manual_booking(self, device):
-        """Owner takes a phone call and books it by hand: evening time (outside opening hours is allowed)."""
+        """Owner takes a phone call and books it by hand: evening time (outside opening hours is allowed).
+
+        Desktop and phone book different days, and if the time is already taken (e.g. a local rerun on the same
+        database), the next evening slot is tried — so the two runs never collide by chance."""
         plate = f"TEL{random.randint(10000, 99999)}"
-        day = (date.today() + timedelta(days=1)).isoformat()
-        start = f"{day}T{random.randint(18, 21):02d}:{random.choice(range(0, 60, 5)):02d}"
+        day = (date.today() + timedelta(days=1 if device == "desktop" else 2)).isoformat()
 
         page = self.owner_page(device)
-        page.goto(f"/panel/wizyty/nowa/?d={day}")
-        if device == "phone":
-            self.assert_no_horizontal_scroll(page)
-        page.get_by_label("Usługa").select_option(label=SERVICE)
-        page.get_by_label("Początek").fill(start)
-        page.get_by_label("Imię").fill("Klient z telefonu")
-        page.get_by_label("Telefon").fill("600 777 666")
-        page.get_by_label("Nr rejestracyjny").fill(plate)
-        page.get_by_role("button", name="Dodaj wizytę").click()
+        for hour, minute in ((h, m) for h in range(18, 23) for m in (0, 30)):
+            start = f"{day}T{hour:02d}:{minute:02d}"
+            page.goto(f"/panel/wizyty/nowa/?d={day}")
+            if device == "phone":
+                self.assert_no_horizontal_scroll(page)
+            page.get_by_label("Usługa").select_option(label=SERVICE)
+            page.get_by_label("Początek").fill(start)
+            page.get_by_label("Imię").fill("Klient z telefonu")
+            page.get_by_label("Telefon").fill("600 777 666")
+            page.get_by_label("Nr rejestracyjny").fill(plate)
+            page.get_by_role("button", name="Dodaj wizytę").click()
+            page.wait_for_load_state()
+            if "/panel/grafik/" in page.url:
+                break
+            expect(page.get_by_role("alert")).to_contain_text("zajęte")  # only "time taken" may make us retry
+        else:
+            self.fail(f"no free evening time on {day}")
 
         expect(page.get_by_text("Wizyta dodana.")).to_be_visible()
         expect(page).to_have_url(re.compile(rf"/panel/grafik/\?d={day}$"))

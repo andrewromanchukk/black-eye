@@ -20,8 +20,9 @@
 
 ## Робочі домовленості
 - Остання версія коду завжди в гілці `dev`.
-- CI: `.github/workflows/ci.yml` — на кожен push збирає образ і запускає тести всередині нього проти Postgres. Базовий образ — змінна репозиторію `BASE_IMAGE` (тег + digest).
-- На push у `main` (після мерджу) той самий перевірений образ пушиться в ECR: `720459752381.dkr.ecr.eu-central-1.amazonaws.com/dev/zapik:<git sha>` (теги незмінні; доступ — OIDC, роль у змінній `AWS_ROLE_ARN`). CD (деплой) поки не робимо.
+- CI — два workflow. Базовий образ — змінна репозиторію `BASE_IMAGE` (тег + digest).
+  - `.github/workflows/pr-checks.yml` — на кожен PR у `main`: збірка образу, unit-тести всередині нього проти Postgres, E2E у браузері. Job `build-and-test` — обов'язкова перевірка в ruleset `main`, не перейменовувати.
+  - `.github/workflows/release.yml` — після мерджу в `main`: збірка, unit-тести, push в ECR `720459752381.dkr.ecr.eu-central-1.amazonaws.com/dev/zapik:<git sha>` (теги незмінні; доступ — OIDC, роль у змінній `AWS_ROLE_ARN`). CD (деплой) поки не робимо.
 - Стек: Python 3.13, Django 5.2, DRF, PostgreSQL 16 (у контейнері), Docker.
 - Мова: UI — польська, код — англійська, документація — українська. Терміни домену — `GLOSSARY.md`.
 - Задачі — GitHub Issues (`ready-for-agent`); публікація через `scripts/publish_issues.sh` (REST API).

@@ -1,0 +1,84 @@
+# Release: after a merge into main, build the app image, re-run the unit tests inside it
+# (the merge commit can differ from what the PR tested) and push that exact image to ECR as <repo>:<full git sha>.
+# E2E already ran in pr-checks.yml on the PR. ECR tags are immutable; only this workflow's role may push.
+name: release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: eu-central-1
+  ECR_REGISTRY: 720459752381.dkr.ecr.eu-central-1.amazonaws.com
+  ECR_REPOSITORY: dev/zapik
+
+jobs:
+  build-test-push:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write   # OIDC token for AWS
+
+    services:
+      db:
+        # Same pinned image as docker-compose.yml
+        image: postgres:16.16-alpine3.24@sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e
+        env:
+          POSTGRES_DB: zapik
+          POSTGRES_USER: zapik
+          POSTGRES_PASSWORD: zapik
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U zapik -d zapik"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Check BASE_IMAGE variable
+        env:
+          BASE_IMAGE: ${{ vars.BASE_IMAGE }}
+        run: |
+          if [ -z "$BASE_IMAGE" ]; then
+            echo "::error::Repository variable BASE_IMAGE is not set"
+            exit 1
+          fi
+          echo "Base image: $BASE_IMAGE"
+
+      - name: Build image
+        env:
+          BASE_IMAGE: ${{ vars.BASE_IMAGE }}
+        run: docker build --build-arg BASE_IMAGE="$BASE_IMAGE" -t zapik-web:ci-${{ github.sha }} .
+
+      - name: Run tests inside the image
+        run: |
+          docker run --rm --network host \
+            -e DJANGO_ENV=local \
+            -e DJANGO_SECRET_KEY=ci-only-not-secret \
+            -e DATABASE_URL=postgres://zapik:zapik@localhost:5432/zapik \
+            -e RUN_MIGRATIONS=0 \
+            -e SEED_DEMO=0 \
+            zapik-web:ci-${{ github.sha }} \
+            python manage.py test tests
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Push image to ECR
+        run: |
+          aws ecr get-login-password --region "$AWS_REGION" \
+            | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+          IMAGE="$ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}"
+          docker tag zapik-web:ci-${{ github.sha }} "$IMAGE"
+          docker push "$IMAGE"
+          echo "Pushed $IMAGE" >> "$GITHUB_STEP_SUMMARY"

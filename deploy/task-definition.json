@@ -36,11 +36,11 @@
       "secrets": [
         {
           "name": "DATABASE_URL",
-          "valueFrom": "arn:aws:secretsmanager:eu-central-1:720459752381:secret:zapik/staging-XXXXXX:DATABASE_URL::"
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:720459752381:secret:zapik/staging-ml6mSX:DATABASE_URL::"
         },
         {
           "name": "DJANGO_SECRET_KEY",
-          "valueFrom": "arn:aws:secretsmanager:eu-central-1:720459752381:secret:zapik/staging-XXXXXX:DJANGO_SECRET_KEY::"
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:720459752381:secret:zapik/staging-ml6mSX:DJANGO_SECRET_KEY::"
         }
       ],
       "healthCheck": {

@@ -14,6 +14,8 @@ env:
   AWS_REGION: eu-central-1
   ECR_REGISTRY: 720459752381.dkr.ecr.eu-central-1.amazonaws.com
   ECR_REPOSITORY: dev/zapik
+  ECS_CLUSTER: zapik-staging        # existing ECS cluster and service (not created by this workflow)
+  ECS_SERVICE: zapik-staging-web
 
 jobs:
   release:
@@ -181,3 +183,52 @@ jobs:
           docker tag zapik-web:ci-${{ github.sha }} "$IMAGE"
           docker push "$IMAGE"
           echo "Pushed $IMAGE" >> "$GITHUB_STEP_SUMMARY"
+
+  # Deploy the image that `release` just tested and pushed: dev/zapik:<git sha> -> task definition -> ECS service.
+  deploy:
+    needs: release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    concurrency:
+      group: deploy-staging        # one deploy at a time; a newer merge waits instead of racing
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write   # OIDC token for AWS
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Put this commit's image into the task definition
+        id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@8d79160660ad39c402a16e5fc7cd2a32e8f7d6b7 # v1.9.1
+        with:
+          task-definition: deploy/task-definition.json
+          container-name: web
+          image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+
+      - name: Register task definition and update the ECS service
+        id: deploy
+        uses: aws-actions/amazon-ecs-deploy-task-definition@a00d4d57ac0de1a99b39fe469f3d898d38717c2b # v2.6.4
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          service: ${{ env.ECS_SERVICE }}
+          wait-for-service-stability: true
+          wait-for-minutes: 10
+
+      - name: Deploy summary
+        run: |
+          {
+            echo "### Deployed to ECS"
+            echo "- Image: \`${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ github.sha }}\`"
+            echo "- Task definition: \`${{ steps.deploy.outputs.task-definition-arn }}\`"
+            echo "- Service: \`${ECS_CLUSTER}/${ECS_SERVICE}\` (stable)"
+          } >> "$GITHUB_STEP_SUMMARY"
+

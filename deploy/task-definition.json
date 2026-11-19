@@ -1,0 +1,70 @@
+{
+  "family": "zapik-staging-web",
+  "requiresCompatibilities": ["FARGATE"],
+  "networkMode": "awsvpc",
+  "cpu": "256",
+  "memory": "512",
+  "runtimePlatform": {
+    "operatingSystemFamily": "LINUX",
+    "cpuArchitecture": "X86_64"
+  },
+  "executionRoleArn": "arn:aws:iam::720459752381:role/zapik-staging-ecs-execution",
+  "containerDefinitions": [
+    {
+      "name": "web",
+      "image": "720459752381.dkr.ecr.eu-central-1.amazonaws.com/dev/zapik:SET_BY_CI",
+      "essential": true,
+      "portMappings": [
+        {
+          "name": "web-http",
+          "containerPort": 8000,
+          "protocol": "tcp",
+          "appProtocol": "http"
+        }
+      ],
+      "environment": [
+        { "name": "DJANGO_ENV", "value": "staging" },
+        { "name": "DJANGO_DEBUG", "value": "False" },
+        { "name": "DJANGO_ALLOWED_HOSTS", "value": "staging.zapik.pl,localhost" },
+        { "name": "DJANGO_CSRF_TRUSTED_ORIGINS", "value": "https://staging.zapik.pl" },
+        { "name": "SITE_URL", "value": "https://staging.zapik.pl" },
+        { "name": "SMS_BACKEND", "value": "apps.notifications.backends.LogSmsBackend" },
+        { "name": "LOG_LEVEL", "value": "INFO" },
+        { "name": "RUN_MIGRATIONS", "value": "0" },
+        { "name": "SEED_DEMO", "value": "0" }
+      ],
+      "secrets": [
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:720459752381:secret:zapik/staging-ml6mSX:DATABASE_URL::"
+        },
+        {
+          "name": "DJANGO_SECRET_KEY",
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:720459752381:secret:zapik/staging-ml6mSX:DJANGO_SECRET_KEY::"
+        }
+      ],
+      "healthCheck": {
+        "command": [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request as u; u.urlopen(u.Request('http://localhost:8000/healthz', headers={'X-Forwarded-Proto': 'https'}), timeout=3)"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 30
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/zapik-staging",
+          "awslogs-region": "eu-central-1",
+          "awslogs-stream-prefix": "web",
+          "awslogs-create-group": "true"
+        }
+      },
+      "stopTimeout": 30
+    }
+  ]
+}

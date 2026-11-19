@@ -15,7 +15,7 @@ env:
   ECR_REGISTRY: 720459752381.dkr.ecr.eu-central-1.amazonaws.com
   ECR_REPOSITORY: dev/zapik
   ECS_CLUSTER: zapik-staging        # existing ECS cluster and service (not created by this workflow)
-  ECS_SERVICE: zapik-staging-web
+  ECS_SERVICE: zapik-staging-web-service-pca2v5gm
 
 jobs:
   release:
